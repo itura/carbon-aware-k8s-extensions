@@ -33,7 +33,7 @@ type EmissionsForecastBatchDTO struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewEmissionsForecastBatchDTO(requestedAt time.Time, location string, ) *EmissionsForecastBatchDTO {
+func NewEmissionsForecastBatchDTO(requestedAt time.Time, location string) *EmissionsForecastBatchDTO {
 	this := EmissionsForecastBatchDTO{}
 	this.RequestedAt = requestedAt
 	this.Location = location
@@ -50,7 +50,7 @@ func NewEmissionsForecastBatchDTOWithDefaults() *EmissionsForecastBatchDTO {
 
 // GetRequestedAt returns the RequestedAt field value
 func (o *EmissionsForecastBatchDTO) GetRequestedAt() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -61,7 +61,7 @@ func (o *EmissionsForecastBatchDTO) GetRequestedAt() time.Time {
 // GetRequestedAtOk returns a tuple with the RequestedAt field value
 // and a boolean to check if the value has been set.
 func (o *EmissionsForecastBatchDTO) GetRequestedAtOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.RequestedAt, true
@@ -170,7 +170,7 @@ func (o *EmissionsForecastBatchDTO) SetWindowSize(v int32) {
 
 // GetLocation returns the Location field value
 func (o *EmissionsForecastBatchDTO) GetLocation() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -181,7 +181,7 @@ func (o *EmissionsForecastBatchDTO) GetLocation() string {
 // GetLocationOk returns a tuple with the Location field value
 // and a boolean to check if the value has been set.
 func (o *EmissionsForecastBatchDTO) GetLocationOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Location, true
@@ -247,5 +247,3 @@ func (v *NullableEmissionsForecastBatchDTO) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

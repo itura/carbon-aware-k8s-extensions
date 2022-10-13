@@ -31,7 +31,7 @@ type CarbonIntensityDTO struct {
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCarbonIntensityDTO(location string, startTime time.Time, endTime time.Time, ) *CarbonIntensityDTO {
+func NewCarbonIntensityDTO(location string, startTime time.Time, endTime time.Time) *CarbonIntensityDTO {
 	this := CarbonIntensityDTO{}
 	this.Location = location
 	this.StartTime = startTime
@@ -49,7 +49,7 @@ func NewCarbonIntensityDTOWithDefaults() *CarbonIntensityDTO {
 
 // GetLocation returns the Location field value
 func (o *CarbonIntensityDTO) GetLocation() string {
-	if o == nil  {
+	if o == nil {
 		var ret string
 		return ret
 	}
@@ -60,7 +60,7 @@ func (o *CarbonIntensityDTO) GetLocation() string {
 // GetLocationOk returns a tuple with the Location field value
 // and a boolean to check if the value has been set.
 func (o *CarbonIntensityDTO) GetLocationOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Location, true
@@ -73,7 +73,7 @@ func (o *CarbonIntensityDTO) SetLocation(v string) {
 
 // GetStartTime returns the StartTime field value
 func (o *CarbonIntensityDTO) GetStartTime() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -84,7 +84,7 @@ func (o *CarbonIntensityDTO) GetStartTime() time.Time {
 // GetStartTimeOk returns a tuple with the StartTime field value
 // and a boolean to check if the value has been set.
 func (o *CarbonIntensityDTO) GetStartTimeOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.StartTime, true
@@ -97,7 +97,7 @@ func (o *CarbonIntensityDTO) SetStartTime(v time.Time) {
 
 // GetEndTime returns the EndTime field value
 func (o *CarbonIntensityDTO) GetEndTime() time.Time {
-	if o == nil  {
+	if o == nil {
 		var ret time.Time
 		return ret
 	}
@@ -108,7 +108,7 @@ func (o *CarbonIntensityDTO) GetEndTime() time.Time {
 // GetEndTimeOk returns a tuple with the EndTime field value
 // and a boolean to check if the value has been set.
 func (o *CarbonIntensityDTO) GetEndTimeOk() (*time.Time, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.EndTime, true
@@ -203,5 +203,3 @@ func (v *NullableCarbonIntensityDTO) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

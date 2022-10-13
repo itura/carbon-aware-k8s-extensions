@@ -16,8 +16,8 @@ import (
 	_ioutil "io/ioutil"
 	_nethttp "net/http"
 	_neturl "net/url"
-	"time"
 	"reflect"
+	"time"
 )
 
 // Linger please
@@ -29,8 +29,8 @@ var (
 type CarbonAwareApiService service
 
 type ApiBatchForecastDataAsyncRequest struct {
-	ctx _context.Context
-	ApiService *CarbonAwareApiService
+	ctx                       _context.Context
+	ApiService                *CarbonAwareApiService
 	emissionsForecastBatchDTO *[]EmissionsForecastBatchDTO
 }
 
@@ -45,19 +45,19 @@ func (r ApiBatchForecastDataAsyncRequest) Execute() ([]EmissionsForecastDTO, *_n
 
 /*
  * BatchForecastDataAsync Given an array of historical forecasts, retrieves the data that contains  forecasts metadata, the optimal forecast and a range of forecasts filtered by the attributes [start...end] if provided.
- * This endpoint takes a batch of requests for historical forecast data, fetches them, and calculates the optimal 
+ * This endpoint takes a batch of requests for historical forecast data, fetches them, and calculates the optimal
 marginal carbon intensity windows for each using the same parameters available to the '/emissions/forecasts/current'
 endpoint.
-            
-This endpoint is useful for back-testing what one might have done in the past, if they had access to the 
+
+This endpoint is useful for back-testing what one might have done in the past, if they had access to the
 current forecast at the time.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return ApiBatchForecastDataAsyncRequest
- */
+*/
 func (a *CarbonAwareApiService) BatchForecastDataAsync(ctx _context.Context) ApiBatchForecastDataAsyncRequest {
 	return ApiBatchForecastDataAsyncRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -168,11 +168,11 @@ func (a *CarbonAwareApiService) BatchForecastDataAsyncExecute(r ApiBatchForecast
 }
 
 type ApiGetAverageCarbonIntensityRequest struct {
-	ctx _context.Context
+	ctx        _context.Context
 	ApiService *CarbonAwareApiService
-	location *string
-	startTime *time.Time
-	endTime *time.Time
+	location   *string
+	startTime  *time.Time
+	endTime    *time.Time
 }
 
 func (r ApiGetAverageCarbonIntensityRequest) Location(location string) ApiGetAverageCarbonIntensityRequest {
@@ -201,7 +201,7 @@ func (r ApiGetAverageCarbonIntensityRequest) Execute() (CarbonIntensityDTO, *_ne
 func (a *CarbonAwareApiService) GetAverageCarbonIntensity(ctx _context.Context) ApiGetAverageCarbonIntensityRequest {
 	return ApiGetAverageCarbonIntensityRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -324,8 +324,8 @@ func (a *CarbonAwareApiService) GetAverageCarbonIntensityExecute(r ApiGetAverage
 }
 
 type ApiGetAverageCarbonIntensityBatchRequest struct {
-	ctx _context.Context
-	ApiService *CarbonAwareApiService
+	ctx                     _context.Context
+	ApiService              *CarbonAwareApiService
 	carbonIntensityBatchDTO *[]CarbonIntensityBatchDTO
 }
 
@@ -344,11 +344,11 @@ func (r ApiGetAverageCarbonIntensityBatchRequest) Execute() ([]CarbonIntensityDT
 For each item in the request array, the application returns a corresponding object containing the location, time boundaries, and average marginal carbon intensity.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return ApiGetAverageCarbonIntensityBatchRequest
- */
+*/
 func (a *CarbonAwareApiService) GetAverageCarbonIntensityBatch(ctx _context.Context) ApiGetAverageCarbonIntensityBatchRequest {
 	return ApiGetAverageCarbonIntensityBatchRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -458,11 +458,11 @@ func (a *CarbonAwareApiService) GetAverageCarbonIntensityBatchExecute(r ApiGetAv
 }
 
 type ApiGetBestEmissionsDataForLocationsByTimeRequest struct {
-	ctx _context.Context
-	ApiService *CarbonAwareApiService
-	location *[]string
-	time *time.Time
-	toTime *time.Time
+	ctx             _context.Context
+	ApiService      *CarbonAwareApiService
+	location        *[]string
+	time            *time.Time
+	toTime          *time.Time
 	durationMinutes *int32
 }
 
@@ -495,7 +495,7 @@ func (r ApiGetBestEmissionsDataForLocationsByTimeRequest) Execute() ([]Emissions
 func (a *CarbonAwareApiService) GetBestEmissionsDataForLocationsByTime(ctx _context.Context) ApiGetBestEmissionsDataForLocationsByTimeRequest {
 	return ApiGetBestEmissionsDataForLocationsByTimeRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -617,12 +617,12 @@ func (a *CarbonAwareApiService) GetBestEmissionsDataForLocationsByTimeExecute(r 
 }
 
 type ApiGetCurrentForecastDataRequest struct {
-	ctx _context.Context
-	ApiService *CarbonAwareApiService
-	location *[]string
+	ctx         _context.Context
+	ApiService  *CarbonAwareApiService
+	location    *[]string
 	dataStartAt *time.Time
-	dataEndAt *time.Time
-	windowSize *int32
+	dataEndAt   *time.Time
+	windowSize  *int32
 }
 
 func (r ApiGetCurrentForecastDataRequest) Location(location []string) ApiGetCurrentForecastDataRequest {
@@ -648,22 +648,22 @@ func (r ApiGetCurrentForecastDataRequest) Execute() ([]EmissionsForecastDTO, *_n
 
 /*
  * GetCurrentForecastData Retrieves the most recent forecasted data and calculates the optimal marginal carbon intensity window.
- * This endpoint fetches only the most recently generated forecast for all provided locations.  It uses the "dataStartAt" and 
-"dataEndAt" parameters to scope the forecasted data points (if available for those times). If no start or end time 
-boundaries are provided, the entire forecast dataset is used. The scoped data points are used to calculate average marginal 
+ * This endpoint fetches only the most recently generated forecast for all provided locations.  It uses the "dataStartAt" and
+"dataEndAt" parameters to scope the forecasted data points (if available for those times). If no start or end time
+boundaries are provided, the entire forecast dataset is used. The scoped data points are used to calculate average marginal
 carbon intensities of the specified "windowSize" and the optimal marginal carbon intensity window is identified.
-            
-The forecast data represents what the data source predicts future marginal carbon intesity values to be, 
+
+The forecast data represents what the data source predicts future marginal carbon intesity values to be,
 not actual measured emissions data (as future values cannot be known).
-            
+
 This endpoint is useful for determining if there is a more carbon-optimal time to use electicity predicted in the future.
  * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
  * @return ApiGetCurrentForecastDataRequest
- */
+*/
 func (a *CarbonAwareApiService) GetCurrentForecastData(ctx _context.Context) ApiGetCurrentForecastDataRequest {
 	return ApiGetCurrentForecastDataRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -805,11 +805,11 @@ func (a *CarbonAwareApiService) GetCurrentForecastDataExecute(r ApiGetCurrentFor
 }
 
 type ApiGetEmissionsDataForLocationByTimeRequest struct {
-	ctx _context.Context
-	ApiService *CarbonAwareApiService
-	location *string
-	time *time.Time
-	toTime *time.Time
+	ctx             _context.Context
+	ApiService      *CarbonAwareApiService
+	location        *string
+	time            *time.Time
+	toTime          *time.Time
 	durationMinutes *int32
 }
 
@@ -842,7 +842,7 @@ func (r ApiGetEmissionsDataForLocationByTimeRequest) Execute() ([]EmissionsData,
 func (a *CarbonAwareApiService) GetEmissionsDataForLocationByTime(ctx _context.Context) ApiGetEmissionsDataForLocationByTimeRequest {
 	return ApiGetEmissionsDataForLocationByTimeRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 
@@ -954,11 +954,11 @@ func (a *CarbonAwareApiService) GetEmissionsDataForLocationByTimeExecute(r ApiGe
 }
 
 type ApiGetEmissionsDataForLocationsByTimeRequest struct {
-	ctx _context.Context
-	ApiService *CarbonAwareApiService
-	location *[]string
-	time *time.Time
-	toTime *time.Time
+	ctx             _context.Context
+	ApiService      *CarbonAwareApiService
+	location        *[]string
+	time            *time.Time
+	toTime          *time.Time
 	durationMinutes *int32
 }
 
@@ -991,7 +991,7 @@ func (r ApiGetEmissionsDataForLocationsByTimeRequest) Execute() ([]EmissionsData
 func (a *CarbonAwareApiService) GetEmissionsDataForLocationsByTime(ctx _context.Context) ApiGetEmissionsDataForLocationsByTimeRequest {
 	return ApiGetEmissionsDataForLocationsByTimeRequest{
 		ApiService: a,
-		ctx: ctx,
+		ctx:        ctx,
 	}
 }
 

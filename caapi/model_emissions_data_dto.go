@@ -17,10 +17,10 @@ import (
 
 // EmissionsDataDTO struct for EmissionsDataDTO
 type EmissionsDataDTO struct {
-	Location NullableString `json:"location,omitempty"`
-	Timestamp *time.Time `json:"timestamp,omitempty"`
-	Duration *int32 `json:"duration,omitempty"`
-	Value *float64 `json:"value,omitempty"`
+	Location  NullableString `json:"location,omitempty"`
+	Timestamp *time.Time     `json:"timestamp,omitempty"`
+	Duration  *int32         `json:"duration,omitempty"`
+	Value     *float64       `json:"value,omitempty"`
 }
 
 // NewEmissionsDataDTO instantiates a new EmissionsDataDTO object
@@ -53,7 +53,7 @@ func (o *EmissionsDataDTO) GetLocation() string {
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *EmissionsDataDTO) GetLocationOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return o.Location.Get(), o.Location.IsSet()
@@ -72,6 +72,7 @@ func (o *EmissionsDataDTO) HasLocation() bool {
 func (o *EmissionsDataDTO) SetLocation(v string) {
 	o.Location.Set(&v)
 }
+
 // SetLocationNil sets the value for Location to be an explicit nil
 func (o *EmissionsDataDTO) SetLocationNil() {
 	o.Location.Set(nil)
@@ -230,5 +231,3 @@ func (v *NullableEmissionsDataDTO) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

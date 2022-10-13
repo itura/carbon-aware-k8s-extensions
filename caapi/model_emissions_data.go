@@ -18,9 +18,9 @@ import (
 // EmissionsData struct for EmissionsData
 type EmissionsData struct {
 	Location NullableString `json:"location,omitempty"`
-	Time *time.Time `json:"time,omitempty"`
-	Rating *float64 `json:"rating,omitempty"`
-	Duration *string `json:"duration,omitempty"`
+	Time     *time.Time     `json:"time,omitempty"`
+	Rating   *float64       `json:"rating,omitempty"`
+	Duration *string        `json:"duration,omitempty"`
 }
 
 // NewEmissionsData instantiates a new EmissionsData object
@@ -53,7 +53,7 @@ func (o *EmissionsData) GetLocation() string {
 // and a boolean to check if the value has been set.
 // NOTE: If the value is an explicit nil, `nil, true` will be returned
 func (o *EmissionsData) GetLocationOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return o.Location.Get(), o.Location.IsSet()
@@ -72,6 +72,7 @@ func (o *EmissionsData) HasLocation() bool {
 func (o *EmissionsData) SetLocation(v string) {
 	o.Location.Set(&v)
 }
+
 // SetLocationNil sets the value for Location to be an explicit nil
 func (o *EmissionsData) SetLocationNil() {
 	o.Location.Set(nil)
@@ -230,5 +231,3 @@ func (v *NullableEmissionsData) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-

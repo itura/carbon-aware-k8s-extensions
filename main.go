@@ -1,9 +1,13 @@
 package main
 
 import (
+	"ch22/caapi"
+	"context"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"net/http"
+	"time"
 )
 
 func main() {
@@ -46,20 +50,33 @@ func callk8sApi() {
 	}
 }
 
-func callCAApi() {
-	//config := caapi.NewConfiguration()
-	//config.Host = "localhost:8080"
-	//config.Scheme = "http"
-	//ca := caapi.NewAPIClient(config).CarbonAwareApi
-	//emissionsForecastBatchDTO := []caapi.EmissionsForecastBatchDTO{*caapi.NewEmissionsForecastBatchDTO(time.Now(), "eastus")} // []EmissionsForecastBatchDTO | Array of requested forecasts. (optional)
-	//resp, r, err := ca.BatchForecastDataAsync(context.Background()).EmissionsForecastBatchDTO(emissionsForecastBatchDTO).Execute()
+const layout = "2006-01-02"
 
-	//d, r, err := ca.GetCurrentForecastData(context.Background()).
-	//	Location([]string{"eastus"}).
-	//	Execute()
-	//if err != nil {
-	//	fmt.Printf("%s", r.StatusCode)
-	//	panic(err.Error())
-	//}
-	//fmt.Printf("found %d things", len(resp))
+func callCAApi() {
+	config := caapi.NewConfiguration()
+	config.Servers = caapi.ServerConfigurations{
+		{
+			URL: "http://localhost:8080",
+			Variables: map[string]caapi.ServerVariable{
+				"basePath": {
+					DefaultValue: "emissions",
+				},
+			},
+		},
+	}
+	ca := caapi.NewAPIClient(config).CarbonAwareApi
+	startTime, _ := time.Parse(layout, "2022-03-11")
+	endTime, _ := time.Parse(layout, "2022-03-12")
+	data, response, err := ca.GetAverageCarbonIntensity(context.Background()).
+		Location("eastus").
+		StartTime(startTime).
+		EndTime(endTime).
+		Execute()
+	fmt.Println(response.Request.URL.String())
+
+	if response.StatusCode != http.StatusOK {
+		fmt.Printf("%s", response.StatusCode)
+		panic(err.Error())
+	}
+	fmt.Printf("found %.02f things", *data.CarbonIntensity)
 }
