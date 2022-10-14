@@ -11,18 +11,18 @@ import (
 	"path/filepath"
 )
 
-type Client struct {
+type K8sClient struct {
 	underlying *kubernetes.Clientset
 }
 
-func (c *Client) ListNodes() (*v1.NodeList, error) {
+func (c *K8sClient) ListNodes() (*v1.NodeList, error) {
 	response, err := c.underlying.CoreV1().
 		Nodes().
 		List(context.Background(), metav1.ListOptions{})
 	return response, err
 }
 
-func (c *Client) AddTaint(node *v1.Node, taint v1.Taint) (*v1.Node, error) {
+func (c *K8sClient) AddTaint(node *v1.Node, taint v1.Taint) (*v1.Node, error) {
 	node.Spec.Taints = append(node.Spec.Taints, taint)
 	response, err := c.underlying.CoreV1().
 		Nodes().
@@ -30,7 +30,7 @@ func (c *Client) AddTaint(node *v1.Node, taint v1.Taint) (*v1.Node, error) {
 	return response, err
 }
 
-func (c *Client) RemoveTaint(node *v1.Node, key string) (*v1.Node, error) {
+func (c *K8sClient) RemoveTaint(node *v1.Node, key string) (*v1.Node, error) {
 	var updated []v1.Taint
 	for _, taint := range node.Spec.Taints {
 		if taint.Key != key {
@@ -45,7 +45,7 @@ func (c *Client) RemoveTaint(node *v1.Node, key string) (*v1.Node, error) {
 	return response, err
 }
 
-func NewK8sClient() (*Client, error) {
+func NewK8sClient() (*K8sClient, error) {
 	//// creates the in-cluster config
 	//config, err := rest.InClusterConfig()
 	//if err != nil {
@@ -69,5 +69,5 @@ func NewK8sClient() (*Client, error) {
 	if err != nil {
 		panic(err.Error())
 	}
-	return &Client{underlying: clientset}, err
+	return &K8sClient{underlying: clientset}, err
 }

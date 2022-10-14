@@ -1,13 +1,9 @@
 package main
 
 import (
-	"ch22/caapi"
-	"context"
 	"fmt"
 	v1 "k8s.io/api/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"net/http"
-	"time"
 )
 
 func main() {
@@ -24,7 +20,7 @@ func callk8sApi() {
 	}
 	nodes := NewNodes(response.Items)
 
-	fmt.Printf("There are %d nodes in the cluster\n", nodes.Size())
+	fmt.Printf("There are %d nodes in the cluster\n---\n", nodes.Size())
 
 	region := "us-central1"
 	fmt.Printf("nodes in %s:\n", region)
@@ -50,33 +46,12 @@ func callk8sApi() {
 	}
 }
 
-const layout = "2006-01-02"
-
 func callCAApi() {
-	config := caapi.NewConfiguration()
-	config.Servers = caapi.ServerConfigurations{
-		{
-			URL: "http://localhost:8080",
-			Variables: map[string]caapi.ServerVariable{
-				"basePath": {
-					DefaultValue: "emissions",
-				},
-			},
-		},
-	}
-	ca := caapi.NewAPIClient(config).CarbonAwareApi
-	startTime, _ := time.Parse(layout, "2022-03-11")
-	endTime, _ := time.Parse(layout, "2022-03-12")
-	data, response, err := ca.GetAverageCarbonIntensity(context.Background()).
-		Location("eastus").
-		StartTime(startTime).
-		EndTime(endTime).
-		Execute()
-	fmt.Println(response.Request.URL.String())
-
-	if response.StatusCode != http.StatusOK {
-		fmt.Printf("%s", response.StatusCode)
+	ca := NewCAClient("http://localhost:8080")
+	intensity, err := ca.GetAverageCarbonIntensity("eastus", "2022-03-11", "2022-03-12")
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		panic(err.Error())
 	}
-	fmt.Printf("found %.02f things", *data.CarbonIntensity)
+	fmt.Printf("found %.02f things", intensity)
 }
