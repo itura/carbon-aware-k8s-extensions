@@ -8,7 +8,7 @@ import (
 
 func main() {
 	callk8sApi()
-	callCAApi()
+	//callCAApi()
 }
 
 func callk8sApi() {
