@@ -53,24 +53,28 @@ func (s *NodesSuite) TestUpdateMetadataAppliesATaintToNodesInTheLeastGreenLocati
 	n1 := NewNodeBuilder("n1").SetRegion("us-east1").Build()
 	n2 := NewNodeBuilder("n2").SetRegion("us-east1").Build()
 	n3 := NewNodeBuilder("n3").SetRegion("us-central1").Build()
-	policy := NewPolicy().
-		SetIntensity("us-east1", 2.0).
-		SetIntensity("us-central1", 1.0)
+	policy := NewPolicy(CarbonPolicySpec{
+		SortBy:     policySortByIntensity,
+		DataSource: dataSourceCAAPI,
+	}).
+		SetLocations(NewLocations([]Location{{
+			Name:      "us-east1",
+			Intensity: 2.0,
+		}, {
+			Name:      "us-central1",
+			Intensity: 1.0,
+		}}))
 
 	nodes := NewNodes([]v1.Node{n1, n2, n3})
 	nodes.UpdateMetadata(policy)
 
-	highIntensityTaints := []v1.Taint{{
-		Key:   labelIntensity,
-		Value: intensityHigh,
-	}}
 	emptyTaints := []v1.Taint{}
 	s.Equal(
-		highIntensityTaints,
+		[]v1.Taint{taintHighIntensity},
 		nodes.Get(0).Spec.Taints,
 	)
 	s.Equal(
-		highIntensityTaints,
+		[]v1.Taint{taintHighIntensity},
 		nodes.Get(1).Spec.Taints,
 	)
 	s.Equal(

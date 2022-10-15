@@ -5,21 +5,6 @@ import (
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type Mapping[T any] map[string]T
-
-func (m Mapping[T]) Merge(other Mapping[T]) Mapping[T] {
-	result := Mapping[T]{}
-	for k, v := range m {
-		result[k] = v
-	}
-	for k, v := range other {
-		result[k] = v
-	}
-	return result
-}
-
-const labelK8sRegion = "topology.kubernetes.io/region"
-
 type Nodes struct {
 	nodes []v1.Node
 }
@@ -73,12 +58,6 @@ func (n *Nodes) GetRegions() []string {
 		result = append(result, k)
 	}
 	return result
-}
-
-type NodeMetadata struct {
-	Labels      Mapping[string]
-	Annotations Mapping[string]
-	Taints      []v1.Taint
 }
 
 func (n *Nodes) UpdateMetadata(policy *CarbonPolicy) {

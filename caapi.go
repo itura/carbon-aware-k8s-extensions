@@ -52,3 +52,20 @@ func (c *CAClient) GetAverageCarbonIntensity(location string, startDate string, 
 
 	return data.GetCarbonIntensity(), nil
 }
+
+func (c *CAClient) GetLocationRanks(locations []string) ([]string, error) {
+	ca := c.underlying.CarbonAwareApi
+	data, response, err := ca.GetBestEmissionsDataForLocationsByTime(context.Background()).
+		Location(locations).
+		Execute()
+
+	if response.StatusCode != http.StatusOK {
+		return []string{}, err
+	}
+
+	var result []string
+	for _, d := range data {
+		result = append(result, d.GetLocation())
+	}
+	return result, nil
+}
