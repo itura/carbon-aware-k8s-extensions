@@ -23,26 +23,19 @@ func (c *K8sClient) ListNodes() (*v1.NodeList, error) {
 }
 
 func (c *K8sClient) AddTaint(node v1.Node, taint v1.Taint) (v1.Node, error) {
-	node.Spec.Taints = append(node.Spec.Taints, taint)
+	updated := UpdateNode(node).SetTaint(taint).Build()
 
 	result, err := c.underlying.CoreV1().
 		Nodes().
-		Update(context.Background(), &node, metav1.UpdateOptions{})
+		Update(context.Background(), &updated, metav1.UpdateOptions{})
 	return *result, err
 }
 
 func (c *K8sClient) RemoveTaint(node v1.Node, key string) (v1.Node, error) {
-	var updated []v1.Taint
-	for _, taint := range node.Spec.Taints {
-		if taint.Key != key {
-			updated = append(updated, taint)
-		}
-	}
-	node.Spec.Taints = updated
-
+	updated := UpdateNode(node).RemoveTaint(key).Build()
 	result, err := c.underlying.CoreV1().
 		Nodes().
-		Update(context.Background(), &node, metav1.UpdateOptions{})
+		Update(context.Background(), &updated, metav1.UpdateOptions{})
 	return *result, err
 }
 
