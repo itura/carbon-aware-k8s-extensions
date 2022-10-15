@@ -24,7 +24,7 @@ func callk8sApi() {
 
 	region := "us-central1"
 	fmt.Printf("nodes in %s:\n", region)
-	for i, node := range nodes.ForRegion(region) {
+	for i, node := range nodes.ForLocation(region) {
 		zone := node.Labels["topology.kubernetes.io/zone"]
 		fmt.Printf("%0d %s: %s\n", i, node.Name, zone)
 		fmt.Printf("\t taints: %s\n", node.Spec.Taints)

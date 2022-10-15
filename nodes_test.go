@@ -21,8 +21,8 @@ func (s *NodesSuite) TestNodesAreGroupedBasedOnLocationLabels() {
 
 	nodes := NewNodes([]v1.Node{n1, n2, n3})
 
-	s.Equal([]v1.Node{n1}, nodes.ForRegion("us-east1"))
-	s.Equal([]v1.Node{n2, n3}, nodes.ForRegion("us-central1"))
+	s.ElementsMatch([]v1.Node{n1}, nodes.ForLocation("us-east1"))
+	s.ElementsMatch([]v1.Node{n2, n3}, nodes.ForLocation("us-central1"))
 }
 
 func (s *NodesSuite) TestGetRegions() {
@@ -32,15 +32,51 @@ func (s *NodesSuite) TestGetRegions() {
 
 	nodes := NewNodes([]v1.Node{n1, n2, n3})
 
-	s.Equal([]string{"us-east1", "us-central1"}, nodes.GetRegions())
+	s.ElementsMatch([]string{"us-east1", "us-central1"}, nodes.GetRegions())
 }
 
-func (s *NodesSuite) TestUpdateMetadata() {
+func (s *NodesSuite) TestGetAll() {
 	n1 := NewNodeBuilder("n1").SetRegion("us-east1").Build()
-	policy := NewPolicy()
+	n2 := NewNodeBuilder("n2").SetRegion("us-central1").Build()
+	n3 := NewNodeBuilder("n3").SetRegion("us-central1").Build()
 
-	nodes := NewNodes([]v1.Node{n1})
+	nodes := NewNodes([]v1.Node{n1, n2, n3})
+
+	var results []v1.Node
+	for node := range nodes.Iterator() {
+		results = append(results, node)
+	}
+	s.ElementsMatch([]v1.Node{n1, n2, n3}, results)
+}
+
+func (s *NodesSuite) TestUpdateMetadataAppliesATaintToNodesInTheLeastGreenLocation() {
+	n1 := NewNodeBuilder("n1").SetRegion("us-east1").Build()
+	n2 := NewNodeBuilder("n2").SetRegion("us-east1").Build()
+	n3 := NewNodeBuilder("n3").SetRegion("us-central1").Build()
+	policy := NewPolicy().
+		SetIntensity("us-east1", 2.0).
+		SetIntensity("us-central1", 1.0)
+
+	nodes := NewNodes([]v1.Node{n1, n2, n3})
 	nodes.UpdateMetadata(policy)
+
+	highIntensityTaints := []v1.Taint{{
+		Key:   labelIntensity,
+		Value: intensityHigh,
+	}}
+	emptyTaints := []v1.Taint{}
+	s.Equal(
+		highIntensityTaints,
+		nodes.Get(0).Spec.Taints,
+	)
+	s.Equal(
+		highIntensityTaints,
+		nodes.Get(1).Spec.Taints,
+	)
+	s.Equal(
+		emptyTaints,
+		nodes.Get(2).Spec.Taints,
+	)
 }
 
 // changing this behavior would entail deep copying reference fields

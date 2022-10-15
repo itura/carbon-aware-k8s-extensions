@@ -7,49 +7,56 @@ import (
 
 type Mapping[T any] map[string]T
 
+func (m Mapping[T]) Merge(other Mapping[T]) Mapping[T] {
+	result := Mapping[T]{}
+	for k, v := range m {
+		result[k] = v
+	}
+	for k, v := range other {
+		result[k] = v
+	}
+	return result
+}
+
 const labelK8sRegion = "topology.kubernetes.io/region"
-
-type Policy struct {
-}
-
-func NewPolicy() *Policy {
-	return &Policy{}
-}
 
 type Nodes struct {
 	nodes []v1.Node
-	m     Mapping[[]v1.Node]
 }
 
 func NewNodes(nodes []v1.Node) *Nodes {
-	m := Mapping[[]v1.Node]{}
-	for _, node := range nodes {
-		region := node.Labels[labelK8sRegion]
-		_, exists := m[region]
-		if !exists {
-			m[region] = []v1.Node{node}
-		} else {
-			m[region] = append(m[region], node)
-		}
-	}
-
 	return &Nodes{
 		nodes: nodes,
-		m:     m,
 	}
 }
 
-func (n *Nodes) ForRegion(region string) []v1.Node {
-	nodes, present := n.m[region]
-	if !present {
-		return []v1.Node{}
+func (n *Nodes) ForLocation(location string) []v1.Node {
+	var results []v1.Node
+	for _, node := range n.nodes {
+		if getLocation(node) == location {
+			results = append(results, node)
+		}
 	}
+	return results
+}
 
-	return nodes
+func (n *Nodes) Get(i int) v1.Node {
+	return n.nodes[i]
 }
 
 func (n *Nodes) GetAll() []v1.Node {
 	return n.nodes
+}
+
+func (n *Nodes) Iterator() <-chan v1.Node {
+	ch := make(chan v1.Node, len(n.nodes))
+	go func() {
+		for _, node := range n.nodes {
+			ch <- node
+		}
+		close(ch)
+	}()
+	return ch
 }
 
 func (n *Nodes) Size() int {
@@ -57,15 +64,39 @@ func (n *Nodes) Size() int {
 }
 
 func (n *Nodes) GetRegions() []string {
+	_result := Mapping[string]{}
+	for _, node := range n.nodes {
+		_result[getLocation(node)] = ""
+	}
 	var result []string
-	for k, _ := range n.m {
+	for k, _ := range _result {
 		result = append(result, k)
 	}
 	return result
 }
 
-func (n *Nodes) UpdateMetadata(policy *Policy) {
+type NodeMetadata struct {
+	Labels      Mapping[string]
+	Annotations Mapping[string]
+	Taints      []v1.Taint
+}
 
+func (n *Nodes) UpdateMetadata(policy *CarbonPolicy) {
+	locationMetadata := policy.ClassifyLocations(n.GetRegions())
+	for i, node := range n.nodes {
+		location := getLocation(node)
+		metadata, exists := locationMetadata[location]
+		if exists {
+			updater := UpdateNode(node)
+			if len(metadata.Spec.Taints) > 0 {
+				updater.AddAllTaints(metadata.Spec.Taints)
+			}
+			if len(metadata.Labels) > 0 {
+				updater.SetAllLabels(metadata.Labels)
+			}
+			n.nodes[i] = updater.Build()
+		}
+	}
 }
 
 type NodeBuilder struct {
@@ -104,8 +135,20 @@ func (b *NodeBuilder) SetLabel(k, v string) *NodeBuilder {
 	return b
 }
 
-func (b *NodeBuilder) SetTaint(t v1.Taint) *NodeBuilder {
+func (b *NodeBuilder) SetAllLabels(labels Mapping[string]) *NodeBuilder {
+	var m Mapping[string]
+	m = b.node.Labels
+	b.node.Labels = m.Merge(labels)
+	return b
+}
+
+func (b *NodeBuilder) AddTaint(t v1.Taint) *NodeBuilder {
 	b.node.Spec.Taints = append(b.node.Spec.Taints, t)
+	return b
+}
+
+func (b *NodeBuilder) AddAllTaints(ts []v1.Taint) *NodeBuilder {
+	b.node.Spec.Taints = append(b.node.Spec.Taints, ts...)
 	return b
 }
 
@@ -127,4 +170,13 @@ func (b *NodeBuilder) SetAnnotation(k, v string) *NodeBuilder {
 
 func (b *NodeBuilder) SetRegion(r string) *NodeBuilder {
 	return b.SetLabel(labelK8sRegion, r)
+}
+
+func getLocation(n v1.Node) string {
+	result, exists := n.Labels[labelK8sRegion]
+	if exists {
+		return result
+	} else {
+		return ""
+	}
 }

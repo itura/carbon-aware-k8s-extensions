@@ -22,8 +22,23 @@ func (c *K8sClient) ListNodes() (*v1.NodeList, error) {
 	return response, err
 }
 
+func (c *K8sClient) UpdateNodes(nodes *Nodes) (*Nodes, error) {
+	var updated []v1.Node
+	for node := range nodes.Iterator() {
+		current := node
+		result, err := c.underlying.CoreV1().
+			Nodes().
+			Update(context.Background(), &current, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, err
+		}
+		updated = append(updated, *result)
+	}
+	return NewNodes(updated), nil
+}
+
 func (c *K8sClient) AddTaint(node v1.Node, taint v1.Taint) (v1.Node, error) {
-	updated := UpdateNode(node).SetTaint(taint).Build()
+	updated := UpdateNode(node).AddTaint(taint).Build()
 
 	result, err := c.underlying.CoreV1().
 		Nodes().
