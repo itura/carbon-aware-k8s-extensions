@@ -53,8 +53,8 @@ func (s *NodesSuite) TestUpdateMetadataAppliesATaintToNodesInTheLeastGreenLocati
 	n1 := NewNodeBuilder("n1").SetRegion("us-east1").Build()
 	n2 := NewNodeBuilder("n2").SetRegion("us-east1").Build()
 	n3 := NewNodeBuilder("n3").SetRegion("us-central1").Build()
-	policy := NewPolicy(CarbonPolicySpec{
-		SortBy:     policySortByIntensity,
+	policy := NewCarbonPolicy(CarbonPolicySpec{
+		SortBy:     policySortByCurrentIntensity,
 		DataSource: dataSourceCAAPI,
 	}).
 		SetLocations(NewLocations([]Location{{
@@ -68,19 +68,11 @@ func (s *NodesSuite) TestUpdateMetadataAppliesATaintToNodesInTheLeastGreenLocati
 	nodes := NewNodes([]v1.Node{n1, n2, n3})
 	nodes.UpdateMetadata(policy)
 
+	taints := []v1.Taint{taintHighIntensity(v1.TaintEffectNoSchedule)}
 	emptyTaints := []v1.Taint{}
-	s.Equal(
-		[]v1.Taint{taintHighIntensity},
-		nodes.Get(0).Spec.Taints,
-	)
-	s.Equal(
-		[]v1.Taint{taintHighIntensity},
-		nodes.Get(1).Spec.Taints,
-	)
-	s.Equal(
-		emptyTaints,
-		nodes.Get(2).Spec.Taints,
-	)
+	s.Equal(taints, nodes.Get(0).Spec.Taints)
+	s.Equal(taints, nodes.Get(1).Spec.Taints)
+	s.Equal(emptyTaints, nodes.Get(2).Spec.Taints)
 }
 
 // changing this behavior would entail deep copying reference fields

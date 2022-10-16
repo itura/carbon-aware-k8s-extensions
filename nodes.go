@@ -54,14 +54,14 @@ func (n *Nodes) GetRegions() []string {
 		_result[getLocation(node)] = ""
 	}
 	var result []string
-	for k, _ := range _result {
+	for k := range _result {
 		result = append(result, k)
 	}
 	return result
 }
 
 func (n *Nodes) UpdateMetadata(policy *CarbonPolicy) {
-	locationMetadata := policy.ClassifyLocations(n.GetRegions())
+	locationMetadata := policy.NodeUpdatesByLocation(n.GetRegions())
 	for i, node := range n.nodes {
 		location := getLocation(node)
 		metadata, exists := locationMetadata[location]
