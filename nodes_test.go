@@ -49,6 +49,144 @@ func (s *NodesSuite) TestGetAll() {
 	s.ElementsMatch([]v1.Node{n1, n2, n3}, results)
 }
 
+func (s *NodesSuite) TestUpdateTaints() {
+	n1 := NewNodeBuilder("n1").
+		SetRegion("us-east1").
+		AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+		Build()
+	n2 := NewNodeBuilder("n2").SetRegion("us-central1").Build()
+
+	nodes := NewNodes([]v1.Node{n1, n2})
+
+	nodes.Update(Mapping[v1.Node]{
+		"us-east1": NewNodeBuilder("").
+			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
+			Build(),
+	})
+
+	s.Equal(
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
+			Build(),
+		nodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		nodes.Get(1),
+	)
+}
+
+func (s *NodesSuite) TestUpdateLabels() {
+	n1 := NewNodeBuilder("n1").
+		SetRegion("us-east1").
+		SetLabel("yee", "haw").
+		Build()
+	n2 := NewNodeBuilder("n2").SetRegion("us-central1").Build()
+
+	nodes := NewNodes([]v1.Node{n1, n2})
+
+	nodes.Update(Mapping[v1.Node]{
+		"us-east1": NewNodeBuilder("").
+			SetLabel("yee", "haw").
+			SetLabel("hoo", "wee").
+			Build(),
+	})
+
+	s.Equal(
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			SetLabel("yee", "haw").
+			SetLabel("hoo", "wee").
+			Build(),
+		nodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		nodes.Get(1),
+	)
+}
+
+func (s *NodesSuite) TestUpdateAnnotations() {
+	n1 := NewNodeBuilder("n1").
+		SetRegion("us-east1").
+		SetAnnotation("yee", "haw").
+		Build()
+	n2 := NewNodeBuilder("n2").SetRegion("us-central1").Build()
+
+	nodes := NewNodes([]v1.Node{n1, n2})
+
+	nodes.Update(Mapping[v1.Node]{
+		"us-east1": NewNodeBuilder("").
+			SetAnnotation("yee", "haw").
+			SetAnnotation("hoo", "wee").
+			Build(),
+	})
+
+	s.Equal(
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			SetAnnotation("yee", "haw").
+			SetAnnotation("hoo", "wee").
+			Build(),
+		nodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		nodes.Get(1),
+	)
+}
+
+func (s *NodesSuite) TestUpdateAll() {
+	n1 := NewNodeBuilder("n1").
+		SetRegion("us-east1").
+		SetAnnotation("yee", "haw").
+		SetLabel("beep", "boop").
+		AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+		Build()
+	n2 := NewNodeBuilder("n2").SetRegion("us-central1").Build()
+
+	nodes := NewNodes([]v1.Node{n1, n2})
+
+	nodes.Update(Mapping[v1.Node]{
+		"us-east1": NewNodeBuilder("").
+			SetAnnotation("yee", "haw").
+			SetAnnotation("hoo", "wee").
+			SetLabel("beep", "boop").
+			SetLabel("woot", "toot").
+			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
+			Build(),
+	})
+
+	s.Equal(
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			SetAnnotation("yee", "haw").
+			SetAnnotation("hoo", "wee").
+			SetLabel("beep", "boop").
+			SetLabel("woot", "toot").
+			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
+			Build(),
+		nodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		nodes.Get(1),
+	)
+}
+
 // changing this behavior would entail deep copying reference fields
 func (s *NodesSuite) TestUpdateNodeMutatesTheReferencesOfOriginalNode() {
 	n1 := NewNodeBuilder("n1").

@@ -82,7 +82,7 @@ func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
 		return nil, fmt.Errorf("invalid value for .Taints.Type")
 	}
 
-	p.nodes.UpdateMetadata(updates)
+	p.nodes.Update(updates)
 
 	return p.nodes, nil
 }

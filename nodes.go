@@ -60,17 +60,20 @@ func (n *Nodes) GetRegions() []string {
 	return result
 }
 
-func (n *Nodes) UpdateMetadata(updates Mapping[v1.Node]) {
+func (n *Nodes) Update(updates Mapping[v1.Node]) {
 	for i, node := range n.nodes {
 		location := getLocation(node)
-		metadata, exists := updates[location]
+		update, exists := updates[location]
 		if exists {
 			updater := UpdateNode(node)
-			if len(metadata.Spec.Taints) > 0 {
-				updater.AddAllTaints(metadata.Spec.Taints)
+			if len(update.Spec.Taints) > 0 {
+				updater.AddAllTaints(update.Spec.Taints)
 			}
-			if len(metadata.Labels) > 0 {
-				updater.SetAllLabels(metadata.Labels)
+			if len(update.Labels) > 0 {
+				updater.SetAllLabels(update.Labels)
+			}
+			if len(update.Annotations) > 0 {
+				updater.SetAllAnnotations(update.Annotations)
 			}
 			n.nodes[i] = updater.Build()
 		}
@@ -121,12 +124,19 @@ func (b *NodeBuilder) SetAllLabels(labels Mapping[string]) *NodeBuilder {
 }
 
 func (b *NodeBuilder) AddTaint(t v1.Taint) *NodeBuilder {
+	for _, taint := range b.node.Spec.Taints {
+		if taint.Key == t.Key && taint.Effect == t.Effect {
+			return b
+		}
+	}
 	b.node.Spec.Taints = append(b.node.Spec.Taints, t)
 	return b
 }
 
 func (b *NodeBuilder) AddAllTaints(ts []v1.Taint) *NodeBuilder {
-	b.node.Spec.Taints = append(b.node.Spec.Taints, ts...)
+	for _, taint := range ts {
+		b.AddTaint(taint)
+	}
 	return b
 }
 
@@ -143,6 +153,13 @@ func (b *NodeBuilder) RemoveTaint(key string) *NodeBuilder {
 
 func (b *NodeBuilder) SetAnnotation(k, v string) *NodeBuilder {
 	b.node.Annotations[k] = v
+	return b
+}
+
+func (b *NodeBuilder) SetAllAnnotations(annotations Mapping[string]) *NodeBuilder {
+	var m Mapping[string]
+	m = b.node.Annotations
+	b.node.Annotations = m.Merge(annotations)
 	return b
 }
 
