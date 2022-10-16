@@ -6,14 +6,14 @@ import (
 )
 
 type CarbonPolicySpec struct {
-	DataSource string
-	SortBy     string
-	Taints     TaintPolicy
+	DataSource string      `yaml:"dataSource"`
+	SortBy     string      `yaml:"sortBy"`
+	Taints     TaintPolicy `yaml:"taints"`
 }
 
 type TaintPolicy struct {
-	Type   string
-	Effect v1.TaintEffect
+	Type   string         `yaml:"type"`
+	Effect v1.TaintEffect `yaml:"type"`
 }
 
 type CarbonPolicy struct {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"os"
 )
@@ -18,11 +19,10 @@ func main() {
 }
 
 func run() error {
-	policy := NewCarbonPolicy(CarbonPolicySpec{
-		Taints: TaintPolicy{
-			Type: policyTaintTypeTest,
-		},
-	})
+	policy, err := initPolicy()
+	if err != nil {
+		return err
+	}
 	ca := NewCAClient("https://stubs.gov")
 	isInCluster := len(os.Getenv("KUBERNETES_SERVICE_HOST")) > 0
 	k8s, err := NewK8sClient(isInCluster)
@@ -59,6 +59,25 @@ func run() error {
 	fmt.Println("done.")
 	printNodes(nodes)
 	return nil
+}
+
+func initPolicy() (*CarbonPolicy, error) {
+	var spec CarbonPolicySpec
+	dat, err := os.ReadFile("./config.yaml")
+	if err != nil {
+		spec = CarbonPolicySpec{
+			Taints: TaintPolicy{
+				Type: policyTaintTypeTest,
+			},
+		}
+	} else {
+		err = yaml.Unmarshal(dat, &spec)
+		if err != nil {
+			return nil, err
+		}
+	}
+	policy := NewCarbonPolicy(spec)
+	return policy, err
 }
 
 func printNodes(nodes *Nodes) {

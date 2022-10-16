@@ -3,3 +3,11 @@ resources:
   requests:
     cpu: 10m
     memory: 100M
+
+
+policy:
+  dataSource: CAAPI
+  sortBy: currentIntensity
+  taints:
+    type: test
+    effect: PreferNoSchedule

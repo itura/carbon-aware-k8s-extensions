@@ -1,0 +1,5 @@
+dataSource: CAAPI
+sortBy: currentIntensity
+taints:
+  type: test
+  effect: PreferNoSchedule

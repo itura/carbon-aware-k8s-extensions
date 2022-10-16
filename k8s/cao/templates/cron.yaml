@@ -1,3 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: carbon-aware-policy-config
+data:
+  config.yaml: |
+{{ .Values.policy | toYaml | indent 4 }}
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -13,10 +21,19 @@ spec:
       template:
         spec:
           serviceAccountName: carbon-aware-node-manager
+          restartPolicy: Never
           containers:
           - name: cao
-            resources: {{ toYaml .Values.resources | nindent 14 }}
             image: gcr.io/princess-pup/cao
+            imagePullPolicy: Always
+            resources: {{ toYaml .Values.resources | nindent 14 }}
+            volumeMounts:
+              - mountPath: /workdir/config.yaml
+                name: config-volume
+                subPath: config.yaml
             args:
             - hello
-          restartPolicy: Never
+          volumes:
+            - name: config-volume
+              configMap:
+                name: carbon-aware-policy-config
