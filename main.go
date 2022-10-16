@@ -28,12 +28,12 @@ func callk8sApi() {
 		zone := node.Labels["topology.kubernetes.io/zone"]
 		fmt.Printf("%0d %s: %s\n", i, node.Name, zone)
 		fmt.Printf("\t taints: %s\n", node.Spec.Taints)
-		//
-		//node, err = k8s.RemoveTaint(node, "blahblah")
-		//if err != nil {
-		//	panic(err.Error())
-		//}
-		//fmt.Printf("\t taints: %s\n", node.Spec.Taints)
+
+		node, err = k8s.RemoveTaint(node, "blahblah")
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Printf("\t taints: %s\n", node.Spec.Taints)
 		node, err = k8s.AddTaint(node, v1.Taint{
 			Key:    "blahblah",
 			Effect: "NoSchedule",

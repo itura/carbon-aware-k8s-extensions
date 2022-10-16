@@ -11,7 +11,7 @@ const (
 	dataSourceCCF                = "CloudCarbonFootprint"
 	policySortByCurrentIntensity = "currentIntensity"
 	policySortByRating           = "rating"
-	policyTaintType              = "worst"
+	policyTaintTypeWorst         = "worst"
 )
 
 func taintHighIntensity(effect v1.TaintEffect) v1.Taint {

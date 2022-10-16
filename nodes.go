@@ -60,11 +60,10 @@ func (n *Nodes) GetRegions() []string {
 	return result
 }
 
-func (n *Nodes) UpdateMetadata(policy *CarbonPolicy) {
-	locationMetadata := policy.NodeUpdatesByLocation(n.GetRegions())
+func (n *Nodes) UpdateMetadata(updates Mapping[v1.Node]) {
 	for i, node := range n.nodes {
 		location := getLocation(node)
-		metadata, exists := locationMetadata[location]
+		metadata, exists := updates[location]
 		if exists {
 			updater := UpdateNode(node)
 			if len(metadata.Spec.Taints) > 0 {

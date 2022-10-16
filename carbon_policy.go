@@ -17,10 +17,17 @@ type TaintPolicy struct {
 
 type CarbonPolicy struct {
 	locations *Locations
+	nodes     *Nodes
 	Spec      CarbonPolicySpec
 }
 
 func NewCarbonPolicy(spec CarbonPolicySpec) *CarbonPolicy {
+	return &CarbonPolicy{
+		Spec: setDefaults(spec),
+	}
+}
+
+func setDefaults(spec CarbonPolicySpec) CarbonPolicySpec {
 	if spec.DataSource == "" {
 		spec.DataSource = dataSourceCAAPI
 	}
@@ -28,15 +35,12 @@ func NewCarbonPolicy(spec CarbonPolicySpec) *CarbonPolicy {
 		spec.SortBy = policySortByCurrentIntensity
 	}
 	if spec.Taints.Type == "" {
-		spec.Taints.Type = policyTaintType
-
+		spec.Taints.Type = policyTaintTypeWorst
 	}
 	if spec.Taints.Effect == "" {
 		spec.Taints.Effect = v1.TaintEffectNoSchedule
 	}
-	return &CarbonPolicy{
-		Spec: spec,
-	}
+	return spec
 }
 
 func (p *CarbonPolicy) SetLocations(locations *Locations) *CarbonPolicy {
@@ -44,7 +48,12 @@ func (p *CarbonPolicy) SetLocations(locations *Locations) *CarbonPolicy {
 	return p
 }
 
-func (p *CarbonPolicy) NodeUpdatesByLocation(locationNames []string) Mapping[v1.Node] {
+func (p *CarbonPolicy) SetNodes(nodes *Nodes) *CarbonPolicy {
+	p.nodes = nodes
+	return p
+}
+
+func (p *CarbonPolicy) UpdateNodes() *Nodes {
 	if p.Spec.SortBy == policySortByCurrentIntensity {
 		p.locations.SortByIntensity()
 	} else if p.Spec.SortBy == policySortByRating {
@@ -53,14 +62,15 @@ func (p *CarbonPolicy) NodeUpdatesByLocation(locationNames []string) Mapping[v1.
 		panic("invalid value for .SortBy")
 	}
 
-	var results Mapping[v1.Node]
-	if p.Spec.Taints.Type == policyTaintType {
-		results = p.taintWorst(locationNames)
+	var updates Mapping[v1.Node]
+	if p.Spec.Taints.Type == policyTaintTypeWorst {
+		updates = p.taintWorst(p.nodes.GetRegions())
 	} else {
 		panic("invalid value for .Taints.Type")
 	}
 
-	return results
+	p.nodes.UpdateMetadata(updates)
+	return p.nodes
 }
 
 func (p *CarbonPolicy) taintWorst(locationNames []string) Mapping[v1.Node] {

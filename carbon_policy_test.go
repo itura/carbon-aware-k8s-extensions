@@ -16,6 +16,14 @@ type CarbonPolicySuite struct {
 
 func (s *CarbonPolicySuite) TestNodeUpdatesForDefaultPolicy() {
 	policy := NewCarbonPolicy(CarbonPolicySpec{}).
+		SetNodes(NewNodes([]v1.Node{
+			NewNodeBuilder("n1").
+				SetRegion("us-east1").
+				Build(),
+			NewNodeBuilder("n2").
+				SetRegion("us-central1").
+				Build(),
+		})).
 		SetLocations(NewLocations([]Location{{
 			Name:      "us-east1",
 			Intensity: 2.0,
@@ -24,16 +32,20 @@ func (s *CarbonPolicySuite) TestNodeUpdatesForDefaultPolicy() {
 			Intensity: 1.0,
 		}}))
 
-	nodeUpdates := policy.NodeUpdatesByLocation([]string{"us-east1", "us-central1"})
+	updatedNodes := policy.UpdateNodes()
 
 	s.Equal(
-		Mapping[v1.Node]{
-			"us-east1": NewNodeBuilder("").
-				AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
-				Build(),
-			"us-central1": NewNodeBuilder("").Build(),
-		},
-		nodeUpdates,
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			Build(),
+		updatedNodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		updatedNodes.Get(1),
 	)
 }
 
@@ -42,6 +54,14 @@ func (s *CarbonPolicySuite) TestNodeUpdatesForSortByRating() {
 	policy := NewCarbonPolicy(CarbonPolicySpec{
 		SortBy: policySortByRating,
 	}).
+		SetNodes(NewNodes([]v1.Node{
+			NewNodeBuilder("n1").
+				SetRegion("us-east1").
+				Build(),
+			NewNodeBuilder("n2").
+				SetRegion("us-central1").
+				Build(),
+		})).
 		SetLocations(NewLocations([]Location{{
 			Name:   "us-east1",
 			Rating: 2.0,
@@ -50,15 +70,19 @@ func (s *CarbonPolicySuite) TestNodeUpdatesForSortByRating() {
 			Rating: 1.0,
 		}}))
 
-	nodeUpdates := policy.NodeUpdatesByLocation([]string{"us-east1", "us-central1"})
+	updatedNodes := policy.UpdateNodes()
 
 	s.Equal(
-		Mapping[v1.Node]{
-			"us-east1": NewNodeBuilder("").
-				AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
-				Build(),
-			"us-central1": NewNodeBuilder("").Build(),
-		},
-		nodeUpdates,
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			Build(),
+		updatedNodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		updatedNodes.Get(1),
 	)
 }
