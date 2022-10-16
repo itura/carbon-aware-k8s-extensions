@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: carbon-aware-node-manager
+spec:
+  schedule: "*/1 * * * *"
+  concurrencyPolicy: Replace
+  startingDeadlineSeconds: 100
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: carbon-aware-node-manager
+          containers:
+          - name: cao
+            resources: {{ toYaml .Values.resources | nindent 14 }}
+            image: gcr.io/princess-pup/cao
+            args:
+            - hello
+          restartPolicy: Never

@@ -2,56 +2,69 @@ package main
 
 import (
 	"fmt"
-	v1 "k8s.io/api/core/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"os"
 )
 
 func main() {
-	callk8sApi()
-	//callCAApi()
+	err := run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "😭\n")
+		os.Exit(1)
+	}
+
+	fmt.Printf("😎\n")
 }
 
-func callk8sApi() {
-	k8s, err := NewK8sClient()
+func run() error {
+	policy := NewCarbonPolicy(CarbonPolicySpec{
+		Taints: TaintPolicy{
+			Type: policyTaintTypeTest,
+		},
+	})
+	ca := NewCAClient("https://stubs.gov")
+	isInCluster := len(os.Getenv("KUBERNETES_SERVICE_HOST")) > 0
+	k8s, err := NewK8sClient(isInCluster)
+	if err != nil {
+		return err
+	}
 
 	response, err := k8s.ListNodes()
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 	nodes := NewNodes(response.Items)
+	printNodes(nodes)
 
-	fmt.Printf("There are %d nodes in the cluster\n---\n", nodes.Size())
-
-	region := "us-central1"
-	fmt.Printf("nodes in %s:\n", region)
-	for i, node := range nodes.ForLocation(region) {
-		zone := node.Labels["topology.kubernetes.io/zone"]
-		fmt.Printf("%0d %s: %s\n", i, node.Name, zone)
-		fmt.Printf("\t taints: %s\n", node.Spec.Taints)
-
-		node, err = k8s.RemoveTaint(node, "blahblah")
-		if err != nil {
-			panic(err.Error())
-		}
-		fmt.Printf("\t taints: %s\n", node.Spec.Taints)
-		node, err = k8s.AddTaint(node, v1.Taint{
-			Key:    "blahblah",
-			Effect: "NoSchedule",
-		})
-		if err != nil {
-			panic(err.Error())
-		}
-
-		fmt.Printf("\t taints: %s\n", node.Spec.Taints)
+	locations, err := ca.GetLocationData(nodes.GetRegions())
+	if err != nil {
+		return err
 	}
+	fmt.Printf("Found %d locations\n", locations.Len())
+
+	fmt.Println("Updating nodes...")
+	nodes, err = policy.
+		SetNodes(nodes).
+		SetLocations(locations).
+		UpdateNodes()
+	if err != nil {
+		return err
+	}
+
+	nodes, err = k8s.UpdateNodes(nodes)
+	if err != nil {
+		return err
+	}
+	fmt.Println("done.")
+	printNodes(nodes)
+	return nil
 }
 
-func callCAApi() {
-	ca := NewCAClient("http://localhost:8080")
-	intensity, err := ca.GetAverageCarbonIntensity("eastus", "2022-03-11", "2022-03-12")
-	if err != nil {
-		fmt.Printf("%s\n", err.Error())
-		panic(err.Error())
+func printNodes(nodes *Nodes) {
+	fmt.Printf("Found %d nodes\n", nodes.Len())
+	for node := range nodes.Iterator() {
+		fmt.Printf("🟣 %s (%s):\n", node.Name, getLocation(node))
+		fmt.Printf("\tTaints: %s\n", node.Spec.Taints)
 	}
-	fmt.Printf("found %.02f things", intensity)
 }

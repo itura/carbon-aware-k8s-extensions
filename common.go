@@ -12,6 +12,7 @@ const (
 	policySortByCurrentIntensity = "currentIntensity"
 	policySortByRating           = "rating"
 	policyTaintTypeWorst         = "worst"
+	policyTaintTypeTest          = "test"
 )
 
 func taintHighIntensity(effect v1.TaintEffect) v1.Taint {

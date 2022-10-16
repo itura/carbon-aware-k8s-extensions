@@ -44,7 +44,7 @@ func (n *Nodes) Iterator() <-chan v1.Node {
 	return ch
 }
 
-func (n *Nodes) Size() int {
+func (n *Nodes) Len() int {
 	return len(n.nodes)
 }
 

@@ -63,7 +63,7 @@ func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
 	}
 
 	locations := p.nodes.GetRegions()
-	if len(locations) < 2 {
+	if len(locations) < 2 && p.Spec.Taints.Type != policyTaintTypeTest {
 		return p.nodes, nil
 	}
 
@@ -77,6 +77,8 @@ func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
 
 	var updates Mapping[v1.Node]
 	if p.Spec.Taints.Type == policyTaintTypeWorst {
+		updates = p.taintWorst(locations)
+	} else if p.Spec.Taints.Type == policyTaintTypeTest {
 		updates = p.taintWorst(locations)
 	} else {
 		return nil, fmt.Errorf("invalid value for .Taints.Type")
@@ -92,10 +94,10 @@ func (p *CarbonPolicy) taintWorst(locationNames []string) Mapping[v1.Node] {
 	result := Mapping[v1.Node]{}
 	for _, location := range locationNames {
 		if location == dirtiestLocation {
-			meta := NewNodeBuilder("").
+			update := NewNodeBuilder("").
 				AddTaint(taintHighIntensity(p.Spec.Taints.Effect)).
 				Build()
-			result[location] = meta
+			result[location] = update
 		} else {
 			result[location] = NewNodeBuilder("").Build()
 		}

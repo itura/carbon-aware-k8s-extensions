@@ -1,0 +1,3 @@
+apiVersion: v2
+name: carbon-aware-operator
+version: 0.0.1
