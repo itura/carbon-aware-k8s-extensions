@@ -54,10 +54,6 @@ func (l *Locations) GetLast() Location {
 	return l.locations[len(l.locations)-1]
 }
 
-func (l *Locations) GetAll() []Location {
-	return l.locations
-}
-
 func (l *Locations) Iterator() <-chan Location {
 	ch := make(chan Location, len(l.locations))
 	go func() {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -53,24 +54,37 @@ func (p *CarbonPolicy) SetNodes(nodes *Nodes) *CarbonPolicy {
 	return p
 }
 
-func (p *CarbonPolicy) UpdateNodes() *Nodes {
+func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
+	if p.locations == nil {
+		return nil, fmt.Errorf("location data missing from policy")
+	}
+	if p.nodes == nil {
+		return nil, fmt.Errorf("node data missing from policy")
+	}
+
+	locations := p.nodes.GetRegions()
+	if len(locations) < 2 {
+		return p.nodes, nil
+	}
+
 	if p.Spec.SortBy == policySortByCurrentIntensity {
 		p.locations.SortByIntensity()
 	} else if p.Spec.SortBy == policySortByRating {
 		p.locations.SortByRating()
 	} else {
-		panic("invalid value for .SortBy")
+		return nil, fmt.Errorf("invalid value for .SortBy")
 	}
 
 	var updates Mapping[v1.Node]
 	if p.Spec.Taints.Type == policyTaintTypeWorst {
-		updates = p.taintWorst(p.nodes.GetRegions())
+		updates = p.taintWorst(locations)
 	} else {
-		panic("invalid value for .Taints.Type")
+		return nil, fmt.Errorf("invalid value for .Taints.Type")
 	}
 
 	p.nodes.UpdateMetadata(updates)
-	return p.nodes
+
+	return p.nodes, nil
 }
 
 func (p *CarbonPolicy) taintWorst(locationNames []string) Mapping[v1.Node] {
