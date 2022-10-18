@@ -24,7 +24,7 @@ spec:
           restartPolicy: Never
           containers:
           - name: cao
-            image: gcr.io/princess-pup/cao
+            image: {{ .Values.image }}
             imagePullPolicy: Always
             resources: {{ toYaml .Values.resources | nindent 14 }}
             volumeMounts:

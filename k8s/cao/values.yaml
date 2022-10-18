@@ -1,4 +1,6 @@
 
+image: gcr.io/princess-pup/cao:latest
+
 resources:
   requests:
     cpu: 10m
