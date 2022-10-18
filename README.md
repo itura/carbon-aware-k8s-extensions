@@ -46,6 +46,9 @@ There are several outputs to this project:
    - This is the main interface for cluster users; the keys and values will be how users configure tolerations and affinities.
    - ex:
      - "greensoftware.foundation/carbon-intensity": "high", "medium", or "low"
+4. Examples
+   - how to leverage the metadata provided by CAO
+   - how to clean up your workloads
 
 
 ## Usage
