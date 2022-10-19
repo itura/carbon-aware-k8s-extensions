@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/stretchr/testify/suite"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithDefaultPolicy() {
 		})).
 		SetLocations(NewLocations([]Location{{
 			Name:      "us-east1",
-			Intensity: 2.0,
+			Intensity: 51.0,
 		}, {
 			Name:      "us-central1",
 			Intensity: 1.0,
@@ -39,12 +40,14 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithDefaultPolicy() {
 		NewNodeBuilder("n1").
 			SetRegion("us-east1").
 			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			SetLabel(labelIntensity, intensityUnaccaptable).
 			Build(),
 		updatedNodes.Get(0),
 	)
 	s.Equal(
 		NewNodeBuilder("n2").
 			SetRegion("us-central1").
+			SetLabel(labelIntensity, intensityAcceptable).
 			Build(),
 		updatedNodes.Get(1),
 	)
@@ -54,6 +57,9 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithDefaultPolicy() {
 func (s *CarbonPolicySuite) TestUpdateNodesBasedOnRating() {
 	policy := NewCarbonPolicy(CarbonPolicySpec{
 		SortBy: policySortByRating,
+		Labels: LabelSpec{
+			Type: policyLabelTypeNone,
+		},
 	}).
 		SetNodes(NewNodes([]v1.Node{
 			NewNodeBuilder("n1").
@@ -91,8 +97,11 @@ func (s *CarbonPolicySuite) TestUpdateNodesBasedOnRating() {
 
 func (s *CarbonPolicySuite) TestUpdateNodesWithTaintEffect() {
 	policy := NewCarbonPolicy(CarbonPolicySpec{
-		Taints: TaintPolicy{
+		Taints: TaintSpec{
 			Effect: v1.TaintEffectPreferNoSchedule,
+		},
+		Labels: LabelSpec{
+			Type: policyLabelTypeNone,
 		},
 	}).
 		SetNodes(NewNodes([]v1.Node{
@@ -178,4 +187,22 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithoutNodes() {
 
 	s.Error(err, "node data missing from policy")
 	s.Nil(updatedNodes)
+}
+
+func (s *CarbonPolicySuite) TestParseSpec() {
+	raw := `---
+labels:
+  type: binary
+  thresholds:
+    acceptable:
+      value: 50
+`
+
+	var spec CarbonPolicySpec
+	err := yaml.Unmarshal([]byte(raw), &spec)
+	if err != nil {
+		s.FailNow(err.Error())
+	}
+
+	s.Equal(50.0, spec.Labels.Thresholds[intensityAcceptable].Value)
 }

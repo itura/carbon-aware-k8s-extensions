@@ -3,3 +3,5 @@ sortBy: currentIntensity
 taints:
   type: test
   effect: PreferNoSchedule
+labels:
+  type: binary

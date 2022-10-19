@@ -6,13 +6,20 @@ const (
 	labelK8sRegion               = "topology.kubernetes.io/region"
 	labelIntensity               = "greensoftware.foundation/carbon-intensity"
 	intensityHigh                = "high"
+	intensityMedium              = "medium"
 	intensityLow                 = "low"
+	intensityAcceptable          = "acceptable"
+	intensityUnaccaptable        = "unacceptable"
 	dataSourceCAAPI              = "CarbonAwareAPI"
 	dataSourceCCF                = "CloudCarbonFootprint"
 	policySortByCurrentIntensity = "currentIntensity"
 	policySortByRating           = "rating"
 	policyTaintTypeWorst         = "worst"
 	policyTaintTypeTest          = "test"
+	policyLabelTypeNone          = "none"
+	policyLabelTypeBinary        = "binary"
+	policyLabelTypeScale         = "scale"
+	comparisonLessThan           = "lessThan"
 )
 
 func taintHighIntensity(effect v1.TaintEffect) v1.Taint {

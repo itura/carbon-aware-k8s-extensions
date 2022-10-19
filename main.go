@@ -66,7 +66,7 @@ func initPolicy() (*CarbonPolicy, error) {
 	dat, err := os.ReadFile("./config.yaml")
 	if err != nil {
 		spec = CarbonPolicySpec{
-			Taints: TaintPolicy{
+			Taints: TaintSpec{
 				Type: policyTaintTypeTest,
 			},
 		}
