@@ -1,4 +1,3 @@
-
 image: gcr.io/princess-pup/cao:latest
 
 resources:
@@ -6,10 +5,10 @@ resources:
     cpu: 10m
     memory: 100M
 
-
 policy:
-  dataSource: CAAPI
-  sortBy: currentIntensity
+  dataSource:
+    type: CAAPI
+    sortBy: currentIntensity
   taints:
-    type: test
-    effect: PreferNoSchedule
+    type: worst
+    shouldTaintOnlyLocation: true

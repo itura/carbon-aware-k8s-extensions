@@ -39,15 +39,15 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithDefaultPolicy() {
 	s.Equal(
 		NewNodeBuilder("n1").
 			SetRegion("us-east1").
-			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
-			SetLabel(labelIntensity, intensityUnaccaptable).
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
+			SetLabel(labelIntensity, optUnAcceptable).
 			Build(),
 		updatedNodes.Get(0),
 	)
 	s.Equal(
 		NewNodeBuilder("n2").
 			SetRegion("us-central1").
-			SetLabel(labelIntensity, intensityAcceptable).
+			SetLabel(labelIntensity, optAcceptable).
 			Build(),
 		updatedNodes.Get(1),
 	)
@@ -56,9 +56,11 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithDefaultPolicy() {
 // 0 rating == good, 100 rating == bad
 func (s *CarbonPolicySuite) TestUpdateNodesBasedOnRating() {
 	policy := NewCarbonPolicy(CarbonPolicySpec{
-		SortBy: policySortByRating,
+		DataSource: DataSourceSpec{
+			SortBy: optRating,
+		},
 		Labels: LabelSpec{
-			Type: policyLabelTypeNone,
+			Type: optNone,
 		},
 	}).
 		SetNodes(NewNodes([]v1.Node{
@@ -83,7 +85,7 @@ func (s *CarbonPolicySuite) TestUpdateNodesBasedOnRating() {
 	s.Equal(
 		NewNodeBuilder("n1").
 			SetRegion("us-east1").
-			AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
 			Build(),
 		updatedNodes.Get(0),
 	)
@@ -101,7 +103,7 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithTaintEffect() {
 			Effect: v1.TaintEffectPreferNoSchedule,
 		},
 		Labels: LabelSpec{
-			Type: policyLabelTypeNone,
+			Type: optNone,
 		},
 	}).
 		SetNodes(NewNodes([]v1.Node{
@@ -138,8 +140,12 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithTaintEffect() {
 	)
 }
 
-func (s *CarbonPolicySuite) TestUpdateNodesWithOnlyOneLocation() {
-	policy := NewCarbonPolicy(CarbonPolicySpec{}).
+func (s *CarbonPolicySuite) TestUpdateNodesWithTaintForOnlyOneLocation() {
+	policy := NewCarbonPolicy(CarbonPolicySpec{
+		Labels: LabelSpec{
+			Type: optNone,
+		},
+	}).
 		SetNodes(NewNodes([]v1.Node{
 			NewNodeBuilder("n1").
 				SetRegion("us-east1").
@@ -159,6 +165,48 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithOnlyOneLocation() {
 			SetRegion("us-east1").
 			Build(),
 		updatedNodes.Get(0),
+	)
+}
+
+func (s *CarbonPolicySuite) TestUpdateNodesWithTaintsAndLabelsDisabled() {
+	policy := NewCarbonPolicy(CarbonPolicySpec{
+		Taints: TaintSpec{
+			Type: optNone,
+		},
+		Labels: LabelSpec{
+			Type: optNone,
+		},
+	}).
+		SetNodes(NewNodes([]v1.Node{
+			NewNodeBuilder("n1").
+				SetRegion("us-east1").
+				Build(),
+			NewNodeBuilder("n2").
+				SetRegion("us-central1").
+				Build(),
+		})).
+		SetLocations(NewLocations([]Location{{
+			Name:      "us-east1",
+			Intensity: 2.0,
+		}, {
+			Name:      "us-central1",
+			Intensity: 1.0,
+		}}))
+
+	updatedNodes, err := policy.UpdateNodes()
+
+	s.Nil(err)
+	s.Equal(
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			Build(),
+		updatedNodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			Build(),
+		updatedNodes.Get(1),
 	)
 }
 
@@ -204,5 +252,5 @@ labels:
 		s.FailNow(err.Error())
 	}
 
-	s.Equal(50.0, spec.Labels.Thresholds[intensityAcceptable].Value)
+	s.Equal(50.0, spec.Labels.Thresholds[optAcceptable].Value)
 }

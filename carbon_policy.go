@@ -6,15 +6,40 @@ import (
 )
 
 type CarbonPolicySpec struct {
-	DataSource string    `yaml:"dataSource"`
-	SortBy     string    `yaml:"sortBy"`
-	Taints     TaintSpec `yaml:"taints"`
-	Labels     LabelSpec `yaml:"labels"`
+	DataSource DataSourceSpec `yaml:"dataSource"`
+	Taints     TaintSpec      `yaml:"taints"`
+	Labels     LabelSpec      `yaml:"labels"`
+}
+
+type DataSourceSpec struct {
+	Type   string `yaml:"type"`
+	SortBy string `yaml:"sortBy"`
+}
+
+func DefaultDataSourceSpec(spec DataSourceSpec) DataSourceSpec {
+	if spec.Type == "" {
+		spec.Type = optCAAPI
+	}
+	if spec.SortBy == "" {
+		spec.SortBy = optCurrentIntensity
+	}
+	return spec
 }
 
 type TaintSpec struct {
-	Type   string         `yaml:"type"`
-	Effect v1.TaintEffect `yaml:"type"`
+	Type                    string         `yaml:"type"`
+	Effect                  v1.TaintEffect `yaml:"effect"`
+	ShouldTaintOnlyLocation bool           `yaml:"shouldTaintOnlyLocation"`
+}
+
+func DefaultTaintSpec(spec TaintSpec) TaintSpec {
+	if spec.Type == "" {
+		spec.Type = optWorst
+	}
+	if spec.Effect == "" {
+		spec.Effect = v1.TaintEffectPreferNoSchedule
+	}
+	return spec
 }
 
 type LabelSpec struct {
@@ -24,11 +49,11 @@ type LabelSpec struct {
 
 func DefaultLabelSpec(spec LabelSpec) LabelSpec {
 	if spec.Type == "" {
-		spec.Type = policyLabelTypeBinary
+		spec.Type = optBinary
 	}
 	if len(spec.Thresholds) == 0 {
 		spec.Thresholds = map[string]ThresholdSpec{
-			intensityAcceptable: DefaultThresholdSpec(ThresholdSpec{}),
+			optAcceptable: DefaultThresholdSpec(ThresholdSpec{}),
 		}
 	}
 	return spec
@@ -41,12 +66,11 @@ type ThresholdSpec struct {
 
 func DefaultThresholdSpec(spec ThresholdSpec) ThresholdSpec {
 	if spec.Type == "" {
-		spec.Type = comparisonLessThan
+		spec.Type = optLessThan
 	}
 	if spec.Value == 0 {
-		spec.Value = 10
+		spec.Value = 50
 	}
-
 	return spec
 }
 
@@ -63,18 +87,8 @@ func NewCarbonPolicy(spec CarbonPolicySpec) *CarbonPolicy {
 }
 
 func setDefaults(spec CarbonPolicySpec) CarbonPolicySpec {
-	if spec.DataSource == "" {
-		spec.DataSource = dataSourceCAAPI
-	}
-	if spec.SortBy == "" {
-		spec.SortBy = policySortByCurrentIntensity
-	}
-	if spec.Taints.Type == "" {
-		spec.Taints.Type = policyTaintTypeWorst
-	}
-	if spec.Taints.Effect == "" {
-		spec.Taints.Effect = v1.TaintEffectNoSchedule
-	}
+	spec.DataSource = DefaultDataSourceSpec(spec.DataSource)
+	spec.Taints = DefaultTaintSpec(spec.Taints)
 	spec.Labels = DefaultLabelSpec(spec.Labels)
 	return spec
 }
@@ -97,34 +111,61 @@ func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
 		return nil, fmt.Errorf("node data missing from policy")
 	}
 
-	locationNames := p.nodes.GetRegions()
-	if len(locationNames) < 2 && p.Spec.Taints.Type != policyTaintTypeTest {
-		return p.nodes, nil
-	}
-
-	if p.Spec.SortBy == policySortByCurrentIntensity {
+	if p.Spec.DataSource.SortBy == optCurrentIntensity {
 		p.locations.SortByIntensity()
-	} else if p.Spec.SortBy == policySortByRating {
+	} else if p.Spec.DataSource.SortBy == optRating {
 		p.locations.SortByRating()
 	} else {
 		return nil, fmt.Errorf("invalid value for .SortBy")
 	}
 
-	var taintUpdates Mapping[v1.Node]
-	if p.Spec.Taints.Type == policyTaintTypeWorst || p.Spec.Taints.Type == policyTaintTypeTest {
-		taintUpdates = p.applyTaintToWorstLocation(locationNames)
-	} else {
-		return nil, fmt.Errorf("invalid value for .Taints.Type")
+	err := p.applyTaints()
+	if err != nil {
+		return nil, err
 	}
-	p.nodes.Update(taintUpdates)
 
-	var labelUpdates Mapping[v1.Node]
-	if p.Spec.Labels.Type == policyLabelTypeBinary {
-		labelUpdates = p.applyBinaryLabels(p.Spec.Labels.Thresholds[intensityAcceptable].Value)
+	err = p.applyLabels()
+	if err != nil {
+		return nil, err
 	}
-	p.nodes.Update(labelUpdates)
 
 	return p.nodes, nil
+}
+
+func (p *CarbonPolicy) applyTaints() error {
+	locationNames := p.nodes.GetRegions()
+	var taintUpdates Mapping[v1.Node]
+
+	switch p.Spec.Taints.Type {
+	case optNone:
+		return nil
+	case optWorst:
+		if len(locationNames) < 2 && !p.Spec.Taints.ShouldTaintOnlyLocation {
+			return nil
+		}
+		taintUpdates = p.applyTaintToWorstLocation(locationNames)
+	default:
+		return fmt.Errorf("invalid value for .Taints.Type")
+	}
+
+	p.nodes.Update(taintUpdates)
+	return nil
+}
+
+func (p *CarbonPolicy) applyLabels() error {
+	var labelUpdates Mapping[v1.Node]
+
+	switch p.Spec.Labels.Type {
+	case optNone:
+		return nil
+	case optBinary:
+		labelUpdates = p.applyBinaryLabels(p.Spec.Labels.Thresholds[optAcceptable].Value)
+	default:
+		return fmt.Errorf("invalid value for .Labels.Type")
+	}
+
+	p.nodes.Update(labelUpdates)
+	return nil
 }
 
 func (p *CarbonPolicy) applyTaintToWorstLocation(locationNames []string) Mapping[v1.Node] {
@@ -146,10 +187,10 @@ func (p *CarbonPolicy) applyTaintToWorstLocation(locationNames []string) Mapping
 func (p *CarbonPolicy) applyBinaryLabels(threshold float64) Mapping[v1.Node] {
 	result := Mapping[v1.Node]{}
 	addAcceptableLabel := NewNodeBuilder("").
-		SetLabel(labelIntensity, intensityAcceptable).
+		SetLabel(labelIntensity, optAcceptable).
 		Build()
 	addUnacceptableLabel := NewNodeBuilder("").
-		SetLabel(labelIntensity, intensityUnaccaptable).
+		SetLabel(labelIntensity, optUnAcceptable).
 		Build()
 
 	update := addAcceptableLabel

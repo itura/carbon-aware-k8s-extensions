@@ -67,7 +67,7 @@ func initPolicy() (*CarbonPolicy, error) {
 	if err != nil {
 		spec = CarbonPolicySpec{
 			Taints: TaintSpec{
-				Type: policyTaintTypeTest,
+				Type: optTest,
 			},
 		}
 	} else {
@@ -85,5 +85,6 @@ func printNodes(nodes *Nodes) {
 	for node := range nodes.Iterator() {
 		fmt.Printf("🟣 %s (%s):\n", node.Name, getLocation(node))
 		fmt.Printf("\tTaints: %s\n", node.Spec.Taints)
+		fmt.Printf("\tLabels: %s\n", node.Labels)
 	}
 }

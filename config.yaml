@@ -1,7 +1,12 @@
-dataSource: CAAPI
-sortBy: currentIntensity
+dataSource:
+  type: CAAPI
+  sortBy: currentIntensity
 taints:
-  type: test
+  type: worst
   effect: PreferNoSchedule
+  shouldTaintOnlyLocation: true
 labels:
   type: binary
+  thresholds:
+    acceptable:
+      value: 50
