@@ -1,0 +1,23 @@
+# has a preferred affinity for acceptably clean nodes
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: greensoftware.foundation/carbon-intensity
+            operator: In
+            values:
+            - acceptable
+  restartPolicy: Never
+  containers:
+  - name: busybox
+    image: busybox
+    command:
+    - echo
+    - hi

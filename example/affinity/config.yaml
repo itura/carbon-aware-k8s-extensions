@@ -1,0 +1,7 @@
+# sets label greensoftware.foundation/carbon-intensity to either 'acceptable' or 'unacceptable' based on intensity threshold
+labels:
+  type: binary
+  thresholds:
+    acceptable:
+      value: 50
+  

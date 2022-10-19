@@ -1,0 +1,13 @@
+# no tolerations -> will not be scheduled on tainted nodes
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: busybox
+    image: busybox
+    command:
+    - echo
+    - hi

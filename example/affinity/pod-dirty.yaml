@@ -1,0 +1,13 @@
+# no affinites, can be scheduled onto unacceptably dirty nodes
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: busybox
+    image: busybox
+    command:
+    - echo
+    - hi

@@ -1,0 +1,5 @@
+# applies taint greensofware.foundation/carbon-intensity with effect NoSchedule to the worst location
+taints:
+  type: worst
+  effect: NoSchedule
+  shouldTaintOnlyLocation: true
