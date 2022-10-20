@@ -1,4 +1,4 @@
-image: gcr.io/princess-pup/cao:latest
+image: gcr.io/princess-pup/cake-node-analyzer:latest
 
 resources:
   requests:
@@ -11,4 +11,5 @@ policy:
     sortBy: currentIntensity
   taints:
     type: worst
+    effect: NoSchedule
     shouldTaintOnlyLocation: true

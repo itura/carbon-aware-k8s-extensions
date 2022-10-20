@@ -3,3 +3,5 @@ taints:
   type: worst
   effect: NoSchedule
   shouldTaintOnlyLocation: true
+labels:
+  type: none

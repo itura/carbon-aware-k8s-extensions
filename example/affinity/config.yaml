@@ -4,4 +4,6 @@ labels:
   thresholds:
     acceptable:
       value: 50
+taints:
+  type: none
   
