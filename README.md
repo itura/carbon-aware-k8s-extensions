@@ -21,8 +21,7 @@ Now, if resources are submitted to the scheduler, they will not be scheduled on 
 # ...
 tolerations:
 - key: greensoftware.foundation/carbon-intensity
-  operator: Equal
-  value: high
+  operator: Exists
   effect: NoSchedule
 ```
 

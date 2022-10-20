@@ -80,6 +80,16 @@ func (n *Nodes) Update(updates Mapping[v1.Node]) {
 	}
 }
 
+func (n *Nodes) Unset(label string) {
+	for i, node := range n.nodes {
+		n.nodes[i] = UpdateNode(node).
+			RemoveLabel(label).
+			RemoveTaint(label).
+			RemoveAnnotation(label).
+			Build()
+	}
+}
+
 type NodeBuilder struct {
 	node v1.Node
 }
@@ -116,6 +126,11 @@ func (b *NodeBuilder) SetLabel(k, v string) *NodeBuilder {
 	return b
 }
 
+func (b *NodeBuilder) RemoveLabel(k string) *NodeBuilder {
+	delete(b.node.Labels, k)
+	return b
+}
+
 func (b *NodeBuilder) SetAllLabels(labels Mapping[string]) *NodeBuilder {
 	var m Mapping[string]
 	m = b.node.Labels
@@ -140,10 +155,10 @@ func (b *NodeBuilder) AddAllTaints(ts []v1.Taint) *NodeBuilder {
 	return b
 }
 
-func (b *NodeBuilder) RemoveTaint(key string) *NodeBuilder {
-	var updated []v1.Taint
+func (b *NodeBuilder) RemoveTaint(k string) *NodeBuilder {
+	updated := []v1.Taint{}
 	for _, taint := range b.node.Spec.Taints {
-		if taint.Key != key {
+		if taint.Key != k {
 			updated = append(updated, taint)
 		}
 	}
@@ -153,6 +168,11 @@ func (b *NodeBuilder) RemoveTaint(key string) *NodeBuilder {
 
 func (b *NodeBuilder) SetAnnotation(k, v string) *NodeBuilder {
 	b.node.Annotations[k] = v
+	return b
+}
+
+func (b *NodeBuilder) RemoveAnnotation(k string) *NodeBuilder {
+	delete(b.node.Annotations, k)
 	return b
 }
 

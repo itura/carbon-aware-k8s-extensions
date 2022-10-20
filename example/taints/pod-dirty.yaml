@@ -6,8 +6,7 @@ metadata:
 spec:
   tolerations:
   - key: greensoftware.foundation/carbon-intensity
-    operator: Equal
-    value: high
+    operator: Exists
     effect: NoSchedule
   restartPolicy: Never
   containers:

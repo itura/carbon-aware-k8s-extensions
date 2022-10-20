@@ -119,6 +119,8 @@ func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
 		return nil, fmt.Errorf("invalid value for .SortBy")
 	}
 
+	p.nodes.Unset(labelIntensity)
+
 	err := p.applyTaints()
 	if err != nil {
 		return nil, err

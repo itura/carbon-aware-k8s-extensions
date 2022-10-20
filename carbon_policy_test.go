@@ -53,6 +53,48 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithDefaultPolicy() {
 	)
 }
 
+func (s *CarbonPolicySuite) TestUpdateNodesOverwritesExistingLabels() {
+	policy := NewCarbonPolicy(CarbonPolicySpec{}).
+		SetNodes(NewNodes([]v1.Node{
+			NewNodeBuilder("n1").
+				SetRegion("us-east1").
+				SetLabel(labelIntensity, optAcceptable).
+				AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+				Build(),
+			NewNodeBuilder("n2").
+				SetRegion("us-central1").
+				SetLabel(labelIntensity, optUnAcceptable).
+				AddTaint(taintHighIntensity(v1.TaintEffectNoSchedule)).
+				Build(),
+		})).
+		SetLocations(NewLocations([]Location{{
+			Name:      "us-east1",
+			Intensity: 51.0,
+		}, {
+			Name:      "us-central1",
+			Intensity: 1.0,
+		}}))
+
+	updatedNodes, err := policy.UpdateNodes()
+
+	s.Nil(err)
+	s.Equal(
+		NewNodeBuilder("n1").
+			SetRegion("us-east1").
+			AddTaint(taintHighIntensity(v1.TaintEffectPreferNoSchedule)).
+			SetLabel(labelIntensity, optUnAcceptable).
+			Build(),
+		updatedNodes.Get(0),
+	)
+	s.Equal(
+		NewNodeBuilder("n2").
+			SetRegion("us-central1").
+			SetLabel(labelIntensity, optAcceptable).
+			Build(),
+		updatedNodes.Get(1),
+	)
+}
+
 // 0 rating == good, 100 rating == bad
 func (s *CarbonPolicySuite) TestUpdateNodesBasedOnRating() {
 	policy := NewCarbonPolicy(CarbonPolicySpec{
@@ -238,6 +280,8 @@ func (s *CarbonPolicySuite) TestUpdateNodesWithoutNodes() {
 }
 
 func (s *CarbonPolicySuite) TestParseSpec() {
+	blah := Mapping[string]{}
+	delete(blah, "haha")
 	raw := `---
 labels:
   type: binary

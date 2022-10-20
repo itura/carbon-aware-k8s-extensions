@@ -4,6 +4,10 @@ resources:
   requests:
     cpu: 10m
     memory: 100M
+tolerations:
+- key: greensoftware.foundation/carbon-intensity
+  operator: Exists
+  effect: NoSchedule
 
 policy:
   dataSource:
