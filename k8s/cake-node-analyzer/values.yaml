@@ -12,7 +12,7 @@ tolerations:
 policy:
   dataSource:
     type: CAAPI
-    sortBy: currentIntensity
+    sortBy: intensity
   taints:
     type: worst
     effect: NoSchedule

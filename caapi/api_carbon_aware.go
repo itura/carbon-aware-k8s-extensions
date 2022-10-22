@@ -44,15 +44,16 @@ func (r ApiBatchForecastDataAsyncRequest) Execute() ([]EmissionsForecastDTO, *_n
 }
 
 /*
- * BatchForecastDataAsync Given an array of historical forecasts, retrieves the data that contains  forecasts metadata, the optimal forecast and a range of forecasts filtered by the attributes [start...end] if provided.
- * This endpoint takes a batch of requests for historical forecast data, fetches them, and calculates the optimal
+  - BatchForecastDataAsync Given an array of historical forecasts, retrieves the data that contains  forecasts metadata, the optimal forecast and a range of forecasts filtered by the attributes [start...end] if provided.
+  - This endpoint takes a batch of requests for historical forecast data, fetches them, and calculates the optimal
+
 marginal carbon intensity windows for each using the same parameters available to the '/emissions/forecasts/current'
 endpoint.
 
 This endpoint is useful for back-testing what one might have done in the past, if they had access to the
 current forecast at the time.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiBatchForecastDataAsyncRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiBatchForecastDataAsyncRequest
 */
 func (a *CarbonAwareApiService) BatchForecastDataAsync(ctx _context.Context) ApiBatchForecastDataAsyncRequest {
 	return ApiBatchForecastDataAsyncRequest{
@@ -339,11 +340,12 @@ func (r ApiGetAverageCarbonIntensityBatchRequest) Execute() ([]CarbonIntensityDT
 }
 
 /*
- * GetAverageCarbonIntensityBatch Given an array of request objects, each with their own location and time boundaries, calculate the average carbon intensity for that location and time period   and return an array of carbon intensity objects.
- * The application only supports batching across a single location with different time boundaries. If multiple locations are provided, an error is returned.
+  - GetAverageCarbonIntensityBatch Given an array of request objects, each with their own location and time boundaries, calculate the average carbon intensity for that location and time period   and return an array of carbon intensity objects.
+  - The application only supports batching across a single location with different time boundaries. If multiple locations are provided, an error is returned.
+
 For each item in the request array, the application returns a corresponding object containing the location, time boundaries, and average marginal carbon intensity.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiGetAverageCarbonIntensityBatchRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiGetAverageCarbonIntensityBatchRequest
 */
 func (a *CarbonAwareApiService) GetAverageCarbonIntensityBatch(ctx _context.Context) ApiGetAverageCarbonIntensityBatchRequest {
 	return ApiGetAverageCarbonIntensityBatchRequest{
@@ -647,8 +649,9 @@ func (r ApiGetCurrentForecastDataRequest) Execute() ([]EmissionsForecastDTO, *_n
 }
 
 /*
- * GetCurrentForecastData Retrieves the most recent forecasted data and calculates the optimal marginal carbon intensity window.
- * This endpoint fetches only the most recently generated forecast for all provided locations.  It uses the "dataStartAt" and
+  - GetCurrentForecastData Retrieves the most recent forecasted data and calculates the optimal marginal carbon intensity window.
+  - This endpoint fetches only the most recently generated forecast for all provided locations.  It uses the "dataStartAt" and
+
 "dataEndAt" parameters to scope the forecasted data points (if available for those times). If no start or end time
 boundaries are provided, the entire forecast dataset is used. The scoped data points are used to calculate average marginal
 carbon intensities of the specified "windowSize" and the optimal marginal carbon intensity window is identified.
@@ -657,8 +660,8 @@ The forecast data represents what the data source predicts future marginal carbo
 not actual measured emissions data (as future values cannot be known).
 
 This endpoint is useful for determining if there is a more carbon-optimal time to use electicity predicted in the future.
- * @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @return ApiGetCurrentForecastDataRequest
+  - @param ctx _context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
+  - @return ApiGetCurrentForecastDataRequest
 */
 func (a *CarbonAwareApiService) GetCurrentForecastData(ctx _context.Context) ApiGetCurrentForecastDataRequest {
 	return ApiGetCurrentForecastDataRequest{

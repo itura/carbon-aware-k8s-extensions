@@ -3,23 +3,25 @@ package main
 import "k8s.io/api/core/v1"
 
 const (
-	labelK8sRegion      = "topology.kubernetes.io/region"
-	labelIntensity      = "greensoftware.foundation/carbon-intensity"
-	optHigh             = "high"
-	optMedium           = "medium"
-	optLow              = "low"
-	optAcceptable       = "acceptable"
-	optUnAcceptable     = "unacceptable"
-	optCAAPI            = "CarbonAwareAPI"
-	optCCF              = "CloudCarbonFootprint"
-	optCurrentIntensity = "currentIntensity"
-	optRating           = "rating"
-	optWorst            = "worst"
-	optTest             = "test"
-	optBinary           = "binary"
-	optScale            = "scale"
-	optLessThan         = "lessThan"
-	optNone             = "none"
+	labelK8sRegion  = "topology.kubernetes.io/region"
+	labelIntensity  = "greensoftware.foundation/carbon-intensity"
+	optHigh         = "high"
+	optMedium       = "medium"
+	optLow          = "low"
+	optAcceptable   = "acceptable"
+	optUnAcceptable = "unacceptable"
+	optCAAPI        = "CarbonAwareAPI"
+	optCCF          = "CloudCarbonFootprint"
+	optIntensity    = "intensity"
+	optRating       = "rating"
+	optWorst        = "worst"
+	optTest         = "test"
+	optBinary       = "binary"
+	optScale        = "scale"
+	optLessThan     = "lessThan"
+	optNone         = "none"
+	optStub         = "stub"
+	optGcp          = "gcp"
 )
 
 func taintHighIntensity(effect v1.TaintEffect) v1.Taint {
@@ -41,4 +43,8 @@ func (m Mapping[T]) Merge(other Mapping[T]) Mapping[T] {
 		result[k] = v
 	}
 	return result
+}
+
+func Id[T any](x T) T {
+	return x
 }

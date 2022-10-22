@@ -2,6 +2,19 @@ package main
 
 import "sort"
 
+type LocationMapper func(location Location) Location
+
+var _gcpRegions = Mapping[string]{
+	"eastus": "us-east1",
+	"centus": "us-central1",
+	"westus": "us-west1",
+}
+
+func gcpRegions(l Location) Location {
+	l.Name = _gcpRegions[l.Name]
+	return l
+}
+
 type Location struct {
 	Name      string
 	Rating    float64
@@ -20,6 +33,13 @@ func NewLocations(locations []Location) *Locations {
 			return false
 		},
 	}
+}
+
+func (l *Locations) Map(fn LocationMapper) *Locations {
+	for i, location := range l.locations {
+		l.locations[i] = fn(location)
+	}
+	return l
 }
 
 func (l *Locations) Len() int {

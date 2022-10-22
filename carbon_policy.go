@@ -12,16 +12,17 @@ type CarbonPolicySpec struct {
 }
 
 type DataSourceSpec struct {
-	Type   string `yaml:"type"`
-	SortBy string `yaml:"sortBy"`
+	Type      string       `yaml:"type"`
+	SortBy    string       `yaml:"sortBy"`
+	Locations LocationSpec `yaml:"locations"`
 }
 
 func DefaultDataSourceSpec(spec DataSourceSpec) DataSourceSpec {
 	if spec.Type == "" {
-		spec.Type = optCAAPI
+		spec.Type = optStub
 	}
 	if spec.SortBy == "" {
-		spec.SortBy = optCurrentIntensity
+		spec.SortBy = optIntensity
 	}
 	return spec
 }
@@ -74,6 +75,10 @@ func DefaultThresholdSpec(spec ThresholdSpec) ThresholdSpec {
 	return spec
 }
 
+type LocationSpec struct {
+	Preset string `yaml:"preset"`
+}
+
 type CarbonPolicy struct {
 	locations *Locations
 	nodes     *Nodes
@@ -94,7 +99,13 @@ func setDefaults(spec CarbonPolicySpec) CarbonPolicySpec {
 }
 
 func (p *CarbonPolicy) SetLocations(locations *Locations) *CarbonPolicy {
-	p.locations = locations
+	var fn LocationMapper
+	if p.Spec.DataSource.Locations.Preset == optGcp {
+		fn = gcpRegions
+	} else {
+		fn = Id[Location]
+	}
+	p.locations = locations.Map(fn)
 	return p
 }
 
@@ -111,7 +122,7 @@ func (p *CarbonPolicy) UpdateNodes() (*Nodes, error) {
 		return nil, fmt.Errorf("node data missing from policy")
 	}
 
-	if p.Spec.DataSource.SortBy == optCurrentIntensity {
+	if p.Spec.DataSource.SortBy == optIntensity {
 		p.locations.SortByIntensity()
 	} else if p.Spec.DataSource.SortBy == optRating {
 		p.locations.SortByRating()

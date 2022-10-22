@@ -23,7 +23,6 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	ca := NewCAClient("https://stubs.gov")
 	isInCluster := len(os.Getenv("KUBERNETES_SERVICE_HOST")) > 0
 	k8s, err := NewK8sClient(isInCluster)
 	if err != nil {
@@ -37,7 +36,11 @@ func run() error {
 	nodes := NewNodes(response.Items)
 	printNodes(nodes)
 
-	locations, err := ca.GetLocationData(nodes.GetRegions())
+	dataSource, err := initDataSource(policy.Spec)
+	if err != nil {
+		return err
+	}
+	locations, err := dataSource.GetLocationData(nodes.GetRegions())
 	if err != nil {
 		return err
 	}
@@ -77,7 +80,18 @@ func initPolicy() (*CarbonPolicy, error) {
 		}
 	}
 	policy := NewCarbonPolicy(spec)
-	return policy, err
+	return policy, nil
+}
+
+func initDataSource(spec CarbonPolicySpec) (EmissionsDataSource, error) {
+	switch spec.DataSource.Type {
+	case optStub:
+		return NewStubEDS(), nil
+	case optCAAPI:
+		return NewCAClient("https://stubs.gov"), nil
+	default:
+		return nil, fmt.Errorf("invalid value for .dataSource.type")
+	}
 }
 
 func printNodes(nodes *Nodes) {

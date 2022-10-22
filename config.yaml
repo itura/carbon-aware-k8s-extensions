@@ -1,6 +1,8 @@
 dataSource:
-  type: CAAPI
-  sortBy: currentIntensity
+  type: stub
+  sortBy: intensity
+  locations:
+    preset: gcp
 taints:
   type: worst
   effect: PreferNoSchedule
