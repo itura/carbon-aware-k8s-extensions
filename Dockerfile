@@ -1,4 +1,4 @@
-FROM golang:1.18-alpine AS build
+FROM golang:1.19-alpine AS build
 RUN apk update && apk upgrade
 RUN mkdir /workdir && mkdir /build
 WORKDIR /workdir

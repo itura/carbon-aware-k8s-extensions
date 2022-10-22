@@ -32,7 +32,7 @@ The intended way to use the tool would be to configure a set of taints and/or la
 
 ## Usage
 Install prereqs:
-  - [go >=1.18](https://go.dev/dl/)
+  - go >=1.19 [from source](https://go.dev/dl/) or [gvm](https://github.com/moovweb/gvm)
 
 ```
 # dev
