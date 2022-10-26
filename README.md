@@ -41,8 +41,8 @@ go run .
 ./scripts/verify.sh
 
 # run
-docker build -t my.repo/cao:latest .
-helm install cao k8s/cao --set image=my.repo/cao:latest
+docker build -t my.repo/cake-node-analyzer:latest .
+helm install cake-node-analyzer k8s/cake-node-analyzer --set image=my.repo/cake-node-analyzer:latest
 ```
 
 ## Misc
@@ -55,7 +55,7 @@ helm install cao k8s/cao --set image=my.repo/cao:latest
   - https://github.com/kubernetes-sigs/scheduler-plugins/blob/master/doc/install.md
   - https://kubernetes.io/docs/tasks/extend-kubernetes/configure-multiple-schedulers/
   - https://github.com/kubernetes-sigs/scheduler-plugins
--GKE labels
+- GKE labels
   - topology.gke.io/zone=us-central1-b
   - topology.kubernetes.io/region=us-central1
   - topology.kubernetes.io/zone=us-central1-b
