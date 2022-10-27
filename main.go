@@ -68,11 +68,7 @@ func initPolicy() (*CarbonPolicy, error) {
 	var spec CarbonPolicySpec
 	dat, err := os.ReadFile("./config.yaml")
 	if err != nil {
-		spec = CarbonPolicySpec{
-			Taints: TaintSpec{
-				Type: optTest,
-			},
-		}
+		spec = CarbonPolicySpec{}
 	} else {
 		err = yaml.Unmarshal(dat, &spec)
 		if err != nil {

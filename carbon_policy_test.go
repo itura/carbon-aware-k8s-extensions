@@ -298,3 +298,19 @@ labels:
 
 	s.Equal(50.0, spec.Labels.Thresholds[optAcceptable].Value)
 }
+
+func (s *CarbonPolicySuite) TestSpecInit() {
+	spec := TaintSpec{}
+
+	result, err := spec.Init()
+
+	s.Nil(err)
+	s.Equal(
+		TaintSpec{
+			Type:                    optWorst,
+			Effect:                  v1.TaintEffectPreferNoSchedule,
+			ShouldTaintOnlyLocation: false,
+		},
+		result,
+	)
+}

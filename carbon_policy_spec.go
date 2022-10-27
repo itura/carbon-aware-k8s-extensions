@@ -1,6 +1,10 @@
 package main
 
-import "k8s.io/api/core/v1"
+import (
+	"fmt"
+	"k8s.io/api/core/v1"
+	"reflect"
+)
 
 type CarbonPolicySpec struct {
 	DataSource DataSourceSpec `yaml:"dataSource"`
@@ -35,6 +39,98 @@ type TaintSpec struct {
 	Type                    string         `yaml:"type"`
 	Effect                  v1.TaintEffect `yaml:"effect"`
 	ShouldTaintOnlyLocation bool           `yaml:"shouldTaintOnlyLocation"`
+}
+
+func (s TaintSpec) Init() (TaintSpec, error) {
+	errs := Validate(&s,
+		NewOption("Type").
+			SetValues(optNone, optWorst).
+			SetDefault(optWorst),
+		NewOption("Effect").
+			SetValues(v1.TaintEffectPreferNoSchedule, v1.TaintEffectNoSchedule, v1.TaintEffectNoExecute).
+			SetDefault(v1.TaintEffectPreferNoSchedule),
+		NewOption("ShouldTaintOnlyLocation").
+			SetDefault(false),
+	)
+
+	if len(errs) > 0 {
+		return s, fmt.Errorf("ouch")
+	}
+
+	return s, nil
+}
+
+func Validate(spec interface{}, options ...*Option) Mapping[ValidationErrors] {
+	val := reflect.ValueOf(spec).Elem()
+
+	errors := Mapping[ValidationErrors]{}
+	for _, option := range options {
+		result := option.SetInitial(val).Build()
+		if result != nil {
+			errors[option.Key] = ValidationErrors{result}
+		}
+	}
+	if len(errors) > 0 {
+		return errors
+	}
+	return nil
+}
+
+type ValidationErrors []error
+
+type Option struct {
+	currentValue  reflect.Value
+	defaultValue  reflect.Value
+	allowedValues []reflect.Value
+	Key           string
+}
+
+func NewOption(key string) *Option {
+	return &Option{Key: key}
+}
+
+func (f *Option) SetInitial(v reflect.Value) *Option {
+	f.currentValue = v.FieldByName(f.Key)
+	return f
+}
+
+func (f *Option) SetValues(vs ...any) *Option {
+	for _, v := range vs {
+		value := reflect.ValueOf(v)
+		f.allowedValues = append(f.allowedValues, value)
+	}
+	return f
+}
+
+func (f *Option) SetDefault(v any) *Option {
+	value := reflect.ValueOf(v)
+	f.defaultValue = value
+	return f
+}
+
+func (f *Option) Build() error {
+	var value any
+	if f.currentValue.IsZero() && !f.defaultValue.IsZero() {
+		value = f.defaultValue.Interface()
+	} else {
+		value = f.currentValue.Interface()
+	}
+	if f.allowedValues != nil {
+		isAllowed := false
+		for _, v := range f.allowedValues {
+			if v.Interface() == value {
+				isAllowed = true
+				break
+			}
+		}
+		if !isAllowed {
+			return fmt.Errorf("invalid value (%v), expected one of %v", value, f.allowedValues)
+		}
+	}
+	if f.currentValue.CanSet() {
+		f.currentValue.Set(reflect.ValueOf(value))
+	}
+	return nil
 }
 
 func DefaultTaintSpec(spec TaintSpec) TaintSpec {
